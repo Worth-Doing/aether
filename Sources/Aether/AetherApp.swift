@@ -57,6 +57,9 @@ struct AetherApp: App {
             .onAppear {
                 initializeApp()
             }
+            .onDisappear {
+                appState?.saveSession()
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1400, height: 900)

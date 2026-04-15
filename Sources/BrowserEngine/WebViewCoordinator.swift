@@ -66,6 +66,15 @@ public final class WebViewCoordinator: NSObject, ObservableObject {
         }
     }
 
+    deinit {
+        progressObservation?.invalidate()
+        titleObservation?.invalidate()
+        urlObservation?.invalidate()
+        canGoBackObservation?.invalidate()
+        canGoForwardObservation?.invalidate()
+        loadingObservation?.invalidate()
+    }
+
     // MARK: - Navigation Actions
 
     public func load(url: URL) {

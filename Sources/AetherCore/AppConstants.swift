@@ -3,7 +3,7 @@ import Foundation
 public enum AppConstants {
     public static let appName = "Aether"
     public static let bundleIdentifier = "com.aether.browser"
-    public static let version = "0.2.0"
+    public static let version = "0.3.0"
 
     public enum Defaults {
         public static let llmModel = "anthropic/claude-sonnet-4"

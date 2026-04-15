@@ -8,7 +8,11 @@ public final class OpenRouterClient: @unchecked Sendable {
 
     public init(keychain: KeychainManager = KeychainManager()) {
         self.keychain = keychain
-        self.session = URLSession(configuration: .default)
+        let config = URLSessionConfiguration.default
+        config.httpMaximumConnectionsPerHost = 4
+        config.timeoutIntervalForRequest = 60
+        config.waitsForConnectivity = true
+        self.session = URLSession(configuration: config)
     }
 
     // MARK: - API Key

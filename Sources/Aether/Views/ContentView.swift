@@ -24,12 +24,13 @@ struct ContentView: View {
     @State private var aiAssistState = AIAssistState()
     @State private var showFindBar: Bool = false
     @State private var findQuery: String = ""
+    @State private var toastManager = ToastManager()
     @AppStorage(AppConstants.UserDefaultsKeys.showStatusBar) private var showStatusBar = true
 
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Toolbar
+                // Glass toolbar
                 ToolbarView(
                     tabStore: tabStore,
                     showSidebar: $showSidebar,
@@ -39,7 +40,7 @@ struct ContentView: View {
                 )
 
                 Divider()
-                    .background(AetherTheme.Colors.border)
+                    .background(AetherTheme.Colors.glassBorderSubtle)
 
                 // Find bar
                 if showFindBar {
@@ -62,7 +63,7 @@ struct ContentView: View {
                     )
 
                     Divider()
-                        .background(AetherTheme.Colors.border)
+                        .background(AetherTheme.Colors.glassBorderSubtle)
                 }
 
                 // Main content area
@@ -79,7 +80,7 @@ struct ContentView: View {
                         .transition(.move(edge: .leading).combined(with: .opacity))
 
                         Divider()
-                            .background(AetherTheme.Colors.border)
+                            .background(AetherTheme.Colors.glassBorderSubtle)
                     }
 
                     // Panel layout
@@ -91,7 +92,7 @@ struct ContentView: View {
                     // AI Assist sidebar
                     if aiAssistState.isVisible {
                         Divider()
-                            .background(AetherTheme.Colors.border)
+                            .background(AetherTheme.Colors.glassBorderSubtle)
 
                         AIAssistView(
                             state: aiAssistState,
@@ -108,21 +109,22 @@ struct ContentView: View {
                 }
             }
             .background(AetherTheme.Colors.background)
-            .animation(AetherTheme.Animation.fast, value: showSidebar)
-            .animation(AetherTheme.Animation.fast, value: aiAssistState.isVisible)
+            .animation(AetherTheme.Animation.spring, value: showSidebar)
+            .animation(AetherTheme.Animation.spring, value: aiAssistState.isVisible)
             .animation(AetherTheme.Animation.fast, value: showFindBar)
 
-            // Command bar overlay
+            // Command bar overlay — glass
             if commandBarState.isVisible {
                 AetherTheme.Colors.overlayBackground
                     .ignoresSafeArea()
                     .onTapGesture {
                         commandBarState.hide()
                     }
+                    .transition(.opacity)
 
                 VStack {
                     Spacer()
-                        .frame(height: 100)
+                        .frame(height: 80)
 
                     CommandBarView(
                         state: commandBarState,
@@ -156,8 +158,18 @@ struct ContentView: View {
 
                     Spacer()
                 }
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
             }
         }
+        // Toast overlay
+        .overlay(alignment: .bottom) {
+            if let toast = toastManager.currentToast {
+                ToastOverlay(toast: toast)
+                    .padding(.bottom, showStatusBar ? AetherTheme.Sizes.statusBarHeight + 12 : 16)
+            }
+        }
+        .animation(AetherTheme.Animation.spring, value: toastManager.currentToast?.id)
+        .animation(AetherTheme.Animation.spring, value: commandBarState.isVisible)
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 openRouterClient: openRouterClient,
@@ -176,7 +188,7 @@ struct ContentView: View {
                 onReopenTab: { tabStore.reopenLastClosedTab() },
                 onCommandBar: { commandBarState.show() },
                 onToggleSidebar: {
-                    withAnimation(AetherTheme.Animation.fast) {
+                    withAnimation(AetherTheme.Animation.spring) {
                         showSidebar.toggle()
                     }
                 },
@@ -228,14 +240,16 @@ struct ContentView: View {
         if bookmarkManager.isBookmarked(url: url) {
             if let existing = bookmarkManager.bookmarks.first(where: { $0.url == url }) {
                 bookmarkManager.removeBookmark(existing.id)
+                toastManager.info("Bookmark removed", icon: "bookmark.slash")
             }
         } else {
             bookmarkManager.addBookmark(url: url, title: tab.title)
+            toastManager.success("Bookmark added", icon: "bookmark.fill")
         }
     }
 }
 
-// MARK: - Find Bar
+// MARK: - Find Bar (Glass)
 
 struct FindBarView: View {
     @Binding var query: String
@@ -257,43 +271,31 @@ struct FindBarView: View {
                 .onSubmit { onFind(true) }
 
             HStack(spacing: AetherTheme.Spacing.xs) {
-                Button { onFind(false) } label: {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(AetherTheme.Colors.textSecondary)
-                        .frame(width: 24, height: 24)
+                GlassIconButton(icon: "chevron.up", size: 11) {
+                    onFind(false)
                 }
-                .buttonStyle(.plain)
 
-                Button { onFind(true) } label: {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(AetherTheme.Colors.textSecondary)
-                        .frame(width: 24, height: 24)
+                GlassIconButton(icon: "chevron.down", size: 11) {
+                    onFind(true)
                 }
-                .buttonStyle(.plain)
 
                 Divider()
                     .frame(height: 16)
 
-                Button { onDismiss() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(AetherTheme.Colors.textTertiary)
-                        .frame(width: 24, height: 24)
+                GlassIconButton(icon: "xmark", size: 10, color: AetherTheme.Colors.textTertiary) {
+                    onDismiss()
                 }
-                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, AetherTheme.Spacing.xl)
         .padding(.vertical, AetherTheme.Spacing.sm)
         .frame(height: AetherTheme.Sizes.findBarHeight)
-        .background(AetherTheme.Colors.surface)
+        .glassToolbar()
         .onAppear { isFocused = true }
     }
 }
 
-// MARK: - Status Bar
+// MARK: - Status Bar (Glass)
 
 struct StatusBarView: View {
     @Bindable var tabStore: TabStore
@@ -302,11 +304,14 @@ struct StatusBarView: View {
         HStack(spacing: AetherTheme.Spacing.lg) {
             if let tab = tabStore.activeTab {
                 if tab.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.35)
+                        .frame(width: 10, height: 10)
                     Text("Loading...")
                         .foregroundColor(AetherTheme.Colors.textTertiary)
                 } else if let url = tab.url {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 9))
+                    Image(systemName: url.scheme == "https" ? "lock.fill" : "globe")
+                        .font(.system(size: 8))
                         .foregroundColor(url.scheme == "https"
                             ? AetherTheme.Colors.success
                             : AetherTheme.Colors.textTertiary
@@ -323,17 +328,23 @@ struct StatusBarView: View {
                coord.currentZoom != 1.0 {
                 Text("\(Int(coord.currentZoom * 100))%")
                     .foregroundColor(AetherTheme.Colors.textTertiary)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(
+                        RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
+                            .fill(AetherTheme.Colors.glassSurface)
+                    )
             }
 
             Text("\(tabStore.allTabs.count) tab\(tabStore.allTabs.count == 1 ? "" : "s")")
                 .foregroundColor(AetherTheme.Colors.textTertiary)
         }
-        .font(AetherTheme.Typography.caption)
+        .font(AetherTheme.Typography.statusBar)
         .padding(.horizontal, AetherTheme.Spacing.xl)
         .frame(height: AetherTheme.Sizes.statusBarHeight)
-        .background(AetherTheme.Colors.surface)
+        .background(AetherTheme.Colors.background.opacity(0.8))
         .overlay(alignment: .top) {
-            Divider().background(AetherTheme.Colors.border)
+            Divider().background(AetherTheme.Colors.glassBorderSubtle)
         }
     }
 }

@@ -65,7 +65,7 @@ public enum AetherTheme {
         // Backgrounds
         public static let background = adaptive(
             light: NSColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0),
-            dark: NSColor(red: 0.08, green: 0.08, blue: 0.10, alpha: 1.0)
+            dark: NSColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 1.0)
         )
 
         public static let surface = adaptive(
@@ -83,78 +83,144 @@ public enum AetherTheme {
             dark: NSColor(red: 0.17, green: 0.17, blue: 0.19, alpha: 1.0)
         )
 
+        // Glass surfaces
+        public static let glassBackground = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.72),
+            dark: NSColor(white: 0.12, alpha: 0.68)
+        )
+
+        public static let glassSurface = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.55),
+            dark: NSColor(white: 0.15, alpha: 0.45)
+        )
+
+        public static let glassToolbar = adaptive(
+            light: NSColor(white: 0.98, alpha: 0.82),
+            dark: NSColor(white: 0.10, alpha: 0.78)
+        )
+
+        public static let glassSidebar = adaptive(
+            light: NSColor(white: 0.96, alpha: 0.75),
+            dark: NSColor(white: 0.08, alpha: 0.72)
+        )
+
+        public static let glassCard = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.65),
+            dark: NSColor(white: 0.14, alpha: 0.55)
+        )
+
+        public static let glassHover = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.85),
+            dark: NSColor(white: 0.18, alpha: 0.65)
+        )
+
+        public static let glassActive = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.92),
+            dark: NSColor(white: 0.20, alpha: 0.75)
+        )
+
+        // Glass borders
+        public static let glassBorder = adaptive(
+            light: NSColor(white: 1.0, alpha: 0.60),
+            dark: NSColor(white: 1.0, alpha: 0.08)
+        )
+
+        public static let glassBorderSubtle = adaptive(
+            light: NSColor(white: 0.0, alpha: 0.06),
+            dark: NSColor(white: 1.0, alpha: 0.05)
+        )
+
         // Borders
         public static let border = adaptive(
-            light: NSColor.black.withAlphaComponent(0.12),
+            light: NSColor.black.withAlphaComponent(0.10),
             dark: NSColor.white.withAlphaComponent(0.08)
         )
 
         public static let borderFocused = adaptive(
-            light: NSColor.black.withAlphaComponent(0.25),
-            dark: NSColor.white.withAlphaComponent(0.20)
+            light: NSColor.black.withAlphaComponent(0.20),
+            dark: NSColor.white.withAlphaComponent(0.18)
         )
 
         // Text
         public static let textPrimary = adaptive(
-            light: NSColor.black.withAlphaComponent(0.85),
-            dark: NSColor.white.withAlphaComponent(0.92)
+            light: NSColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 0.88),
+            dark: NSColor(white: 1.0, alpha: 0.92)
         )
 
         public static let textSecondary = adaptive(
-            light: NSColor.black.withAlphaComponent(0.50),
-            dark: NSColor.white.withAlphaComponent(0.55)
+            light: NSColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 0.50),
+            dark: NSColor(white: 1.0, alpha: 0.55)
         )
 
         public static let textTertiary = adaptive(
-            light: NSColor.black.withAlphaComponent(0.30),
-            dark: NSColor.white.withAlphaComponent(0.35)
+            light: NSColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 0.30),
+            dark: NSColor(white: 1.0, alpha: 0.32)
         )
 
         // Accent
-        public static let accent = Color(nsColor: NSColor(
-            red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0
-        ))
+        public static let accent = adaptive(
+            light: NSColor(red: 0.20, green: 0.48, blue: 1.0, alpha: 1.0),
+            dark: NSColor(red: 0.38, green: 0.60, blue: 1.0, alpha: 1.0)
+        )
 
         public static let accentSubtle = adaptive(
-            light: NSColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 0.10),
-            dark: NSColor(red: 0.35, green: 0.55, blue: 1.0, alpha: 0.15)
+            light: NSColor(red: 0.20, green: 0.48, blue: 1.0, alpha: 0.10),
+            dark: NSColor(red: 0.38, green: 0.60, blue: 1.0, alpha: 0.14)
+        )
+
+        public static let accentGlow = adaptive(
+            light: NSColor(red: 0.20, green: 0.48, blue: 1.0, alpha: 0.20),
+            dark: NSColor(red: 0.38, green: 0.60, blue: 1.0, alpha: 0.25)
         )
 
         // Status
-        public static let success = Color(nsColor: NSColor(
-            red: 0.13, green: 0.77, blue: 0.37, alpha: 1.0
-        ))
+        public static let success = adaptive(
+            light: NSColor(red: 0.15, green: 0.72, blue: 0.40, alpha: 1.0),
+            dark: NSColor(red: 0.25, green: 0.82, blue: 0.50, alpha: 1.0)
+        )
 
-        public static let warning = Color(nsColor: NSColor(
-            red: 0.96, green: 0.62, blue: 0.04, alpha: 1.0
-        ))
+        public static let warning = adaptive(
+            light: NSColor(red: 0.95, green: 0.62, blue: 0.07, alpha: 1.0),
+            dark: NSColor(red: 1.0, green: 0.72, blue: 0.20, alpha: 1.0)
+        )
 
-        public static let error = Color(nsColor: NSColor(
-            red: 0.94, green: 0.27, blue: 0.27, alpha: 1.0
-        ))
+        public static let error = adaptive(
+            light: NSColor(red: 0.92, green: 0.28, blue: 0.28, alpha: 1.0),
+            dark: NSColor(red: 1.0, green: 0.40, blue: 0.40, alpha: 1.0)
+        )
 
         // Semantic
         public static let tabActive = adaptive(
-            light: NSColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0),
-            dark: NSColor(red: 0.14, green: 0.14, blue: 0.16, alpha: 1.0)
+            light: NSColor(white: 1.0, alpha: 0.90),
+            dark: NSColor(white: 0.16, alpha: 0.85)
         )
 
         public static let tabInactive = Color.clear
 
         public static let sidebarBackground = adaptive(
-            light: NSColor(red: 0.94, green: 0.94, blue: 0.94, alpha: 1.0),
-            dark: NSColor(red: 0.06, green: 0.06, blue: 0.08, alpha: 1.0)
+            light: NSColor(red: 0.95, green: 0.95, blue: 0.96, alpha: 0.80),
+            dark: NSColor(red: 0.06, green: 0.06, blue: 0.08, alpha: 0.80)
         )
 
         // Overlay & Shadow
         public static let overlayBackground = adaptive(
-            light: NSColor.black.withAlphaComponent(0.20),
-            dark: NSColor.black.withAlphaComponent(0.35)
+            light: NSColor.black.withAlphaComponent(0.25),
+            dark: NSColor.black.withAlphaComponent(0.45)
         )
 
         public static let shadowColor = adaptive(
-            light: NSColor.black.withAlphaComponent(0.10),
-            dark: NSColor.black.withAlphaComponent(0.40)
+            light: NSColor.black.withAlphaComponent(0.08),
+            dark: NSColor.black.withAlphaComponent(0.50)
+        )
+
+        public static let shadowSubtle = adaptive(
+            light: NSColor.black.withAlphaComponent(0.04),
+            dark: NSColor.black.withAlphaComponent(0.30)
+        )
+
+        public static let shadowDeep = adaptive(
+            light: NSColor.black.withAlphaComponent(0.15),
+            dark: NSColor.black.withAlphaComponent(0.60)
         )
 
         // Find bar
@@ -176,17 +242,18 @@ public enum AetherTheme {
 
     // MARK: - Typography
     public enum Typography {
-        public static let largeTitle = Font.system(size: 28, weight: .bold, design: .default)
-        public static let title = Font.system(size: 20, weight: .semibold, design: .default)
+        public static let largeTitle = Font.system(size: 28, weight: .bold, design: .rounded)
+        public static let title = Font.system(size: 20, weight: .semibold, design: .rounded)
         public static let heading = Font.system(size: 15, weight: .semibold, design: .default)
         public static let body = Font.system(size: 13, weight: .regular, design: .default)
         public static let bodyMedium = Font.system(size: 13, weight: .medium, design: .default)
         public static let caption = Font.system(size: 11, weight: .regular, design: .default)
         public static let captionMedium = Font.system(size: 11, weight: .medium, design: .default)
         public static let mono = Font.system(size: 12, weight: .regular, design: .monospaced)
-        public static let commandBar = Font.system(size: 15, weight: .regular, design: .default)
+        public static let commandBar = Font.system(size: 16, weight: .regular, design: .default)
         public static let tabTitle = Font.system(size: 12, weight: .medium, design: .default)
         public static let shortcut = Font.system(size: 10, weight: .medium, design: .rounded)
+        public static let statusBar = Font.system(size: 10.5, weight: .medium, design: .default)
     }
 
     // MARK: - Spacing
@@ -198,6 +265,7 @@ public enum AetherTheme {
         public static let xl: CGFloat = 16
         public static let xxl: CGFloat = 24
         public static let xxxl: CGFloat = 32
+        public static let xxxxl: CGFloat = 48
     }
 
     // MARK: - Corner Radius
@@ -206,21 +274,25 @@ public enum AetherTheme {
         public static let md: CGFloat = 6
         public static let lg: CGFloat = 8
         public static let xl: CGFloat = 12
+        public static let xxl: CGFloat = 16
         public static let full: CGFloat = 100
     }
 
     // MARK: - Sizes
     public enum Sizes {
-        public static let toolbarHeight: CGFloat = 44
-        public static let tabBarHeight: CGFloat = 36
+        public static let toolbarHeight: CGFloat = 48
+        public static let tabBarHeight: CGFloat = 38
         public static let sidebarWidth: CGFloat = 260
         public static let sidebarCollapsedWidth: CGFloat = 0
-        public static let commandBarHeight: CGFloat = 48
-        public static let commandBarWidth: CGFloat = 620
+        public static let commandBarHeight: CGFloat = 52
+        public static let commandBarWidth: CGFloat = 640
         public static let minPanelWidth: CGFloat = 300
         public static let minPanelHeight: CGFloat = 200
-        public static let findBarHeight: CGFloat = 40
-        public static let statusBarHeight: CGFloat = 24
+        public static let findBarHeight: CGFloat = 42
+        public static let statusBarHeight: CGFloat = 26
+        public static let aiSidebarWidth: CGFloat = 360
+        public static let toastWidth: CGFloat = 320
+        public static let iconButtonSize: CGFloat = 32
     }
 
     // MARK: - Animation
@@ -228,7 +300,27 @@ public enum AetherTheme {
         public static let fast = SwiftUI.Animation.easeInOut(duration: 0.15)
         public static let standard = SwiftUI.Animation.easeInOut(duration: 0.25)
         public static let slow = SwiftUI.Animation.easeInOut(duration: 0.4)
-        public static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.8)
-        public static let bouncy = SwiftUI.Animation.spring(response: 0.35, dampingFraction: 0.7)
+        public static let spring = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.82)
+        public static let bouncy = SwiftUI.Animation.spring(response: 0.35, dampingFraction: 0.68)
+        public static let gentle = SwiftUI.Animation.spring(response: 0.5, dampingFraction: 0.85)
+        public static let snappy = SwiftUI.Animation.spring(response: 0.22, dampingFraction: 0.78)
+    }
+
+    // MARK: - Shadows
+    public enum Shadows {
+        public static func subtle(radius: CGFloat = 4) -> some View {
+            Color.clear
+                .shadow(color: AetherTheme.Colors.shadowSubtle, radius: radius, x: 0, y: 1)
+        }
+
+        public static func medium(radius: CGFloat = 12) -> some View {
+            Color.clear
+                .shadow(color: AetherTheme.Colors.shadowColor, radius: radius, x: 0, y: 4)
+        }
+
+        public static func elevated(radius: CGFloat = 24) -> some View {
+            Color.clear
+                .shadow(color: AetherTheme.Colors.shadowDeep, radius: radius, x: 0, y: 8)
+        }
     }
 }

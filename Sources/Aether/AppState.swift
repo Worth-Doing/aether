@@ -19,6 +19,7 @@ final class AppState {
     let historyRepository: HistoryRepository
     let bookmarkRepository: BookmarkRepository
     let embeddingRepository: EmbeddingRepository
+    let workspaceRepository: WorkspaceRepository
 
     let tabStore: TabStore
     let workspaceManager: WorkspaceManager
@@ -42,9 +43,11 @@ final class AppState {
         let historyRepo = HistoryRepository(database: database)
         let bookmarkRepo = BookmarkRepository(database: database)
         let embeddingRepo = EmbeddingRepository(database: database)
+        let workspaceRepo = WorkspaceRepository(database: database)
         self.historyRepository = historyRepo
         self.bookmarkRepository = bookmarkRepo
         self.embeddingRepository = embeddingRepo
+        self.workspaceRepository = workspaceRepo
 
         // Secure storage
         let keychain = KeychainManager(service: AppConstants.Keychain.serviceName)
@@ -58,6 +61,11 @@ final class AppState {
         let tabStore = TabStore()
         self.tabStore = tabStore
         self.workspaceManager = WorkspaceManager(tabStore: tabStore)
+
+        // Load saved workspaces
+        if let saved = try? workspaceRepo.loadAll() {
+            self.workspaceManager.savedWorkspaces = saved
+        }
 
         // History & bookmarks
         let historyManager = HistoryManager(repository: historyRepo)
@@ -86,6 +94,20 @@ final class AppState {
             semanticIndex: self.semanticIndex
         )
     }
+
+    // MARK: - Session Persistence
+
+    func saveSession() {
+        let session = workspaceManager.getSessionState()
+        try? workspaceRepository.save(session)
+
+        // Also save all saved workspaces
+        for workspace in workspaceManager.savedWorkspaces {
+            try? workspaceRepository.save(workspace)
+        }
+    }
+
+    // MARK: - Private
 
     private func setupHistoryRecording(
         tabStore: TabStore,

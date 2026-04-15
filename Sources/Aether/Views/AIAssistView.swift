@@ -84,7 +84,7 @@ struct AIAssistView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            // Header — glass
             HStack {
                 Text("AI Assist")
                     .font(AetherTheme.Typography.heading)
@@ -101,21 +101,15 @@ struct AIAssistView: View {
                 .pickerStyle(.segmented)
                 .frame(width: 140)
 
-                Button {
+                GlassIconButton(icon: "xmark", size: 11, color: AetherTheme.Colors.textTertiary) {
                     state.isVisible = false
                     state.reset()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(AetherTheme.Colors.textTertiary)
-                        .frame(width: 24, height: 24)
                 }
-                .buttonStyle(.plain)
             }
             .padding(AetherTheme.Spacing.xl)
 
             Divider()
-                .background(AetherTheme.Colors.border)
+                .background(AetherTheme.Colors.glassBorderSubtle)
 
             switch state.mode {
             case .actions:
@@ -124,8 +118,8 @@ struct AIAssistView: View {
                 chatMode
             }
         }
-        .frame(width: 340)
-        .background(AetherTheme.Colors.sidebarBackground)
+        .frame(width: AetherTheme.Sizes.aiSidebarWidth)
+        .glassPanel()
     }
 
     // MARK: - Actions Mode
@@ -147,30 +141,9 @@ struct AIAssistView: View {
         ScrollView {
             VStack(spacing: AetherTheme.Spacing.md) {
                 ForEach(AIAssistState.AIAction.allCases, id: \.self) { action in
-                    Button {
+                    ActionCardButton(action: action) {
                         performAction(action)
-                    } label: {
-                        HStack(spacing: AetherTheme.Spacing.lg) {
-                            Image(systemName: action.icon)
-                                .font(.system(size: 14))
-                                .foregroundColor(AetherTheme.Colors.accent)
-                                .frame(width: 24)
-
-                            Text(action.rawValue)
-                                .font(AetherTheme.Typography.body)
-                                .foregroundColor(AetherTheme.Colors.textPrimary)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 10))
-                                .foregroundColor(AetherTheme.Colors.textTertiary)
-                        }
-                        .padding(AetherTheme.Spacing.lg)
-                        .background(AetherTheme.Colors.surface)
-                        .cornerRadius(AetherTheme.Radius.md)
                     }
-                    .buttonStyle(.plain)
                 }
 
                 if !openRouterClient.isConfigured {
@@ -191,11 +164,21 @@ struct AIAssistView: View {
     private var loadingView: some View {
         VStack(spacing: AetherTheme.Spacing.xl) {
             Spacer()
-            ProgressView()
-                .scaleEffect(0.8)
+
+            ZStack {
+                Circle()
+                    .fill(AetherTheme.Colors.accentGlow)
+                    .frame(width: 60, height: 60)
+                    .blur(radius: 15)
+
+                ProgressView()
+                    .scaleEffect(0.8)
+            }
+
             Text(state.currentAction?.rawValue ?? "Processing...")
                 .font(AetherTheme.Typography.caption)
                 .foregroundColor(AetherTheme.Colors.textSecondary)
+
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -224,7 +207,7 @@ struct AIAssistView: View {
                 .padding(AetherTheme.Spacing.xl)
 
                 Divider()
-                    .background(AetherTheme.Colors.border)
+                    .background(AetherTheme.Colors.glassBorderSubtle)
             }
 
             ScrollView {
@@ -237,7 +220,7 @@ struct AIAssistView: View {
             }
 
             Divider()
-                .background(AetherTheme.Colors.border)
+                .background(AetherTheme.Colors.glassBorderSubtle)
 
             HStack {
                 Button {
@@ -272,7 +255,7 @@ struct AIAssistView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
-            AetherButton("Try Again", style: .secondary) {
+            AetherButton("Try Again", style: .glass) {
                 state.reset()
             }
             Spacer()
@@ -286,12 +269,22 @@ struct AIAssistView: View {
             if state.chatMessages.isEmpty {
                 VStack(spacing: AetherTheme.Spacing.xl) {
                     Spacer()
-                    Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: 32))
-                        .foregroundColor(AetherTheme.Colors.textTertiary)
+
+                    ZStack {
+                        Circle()
+                            .fill(AetherTheme.Colors.accentGlow)
+                            .frame(width: 50, height: 50)
+                            .blur(radius: 12)
+
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.system(size: 28))
+                            .foregroundColor(AetherTheme.Colors.textTertiary)
+                    }
+
                     Text("Ask anything about the current page")
                         .font(AetherTheme.Typography.caption)
                         .foregroundColor(AetherTheme.Colors.textTertiary)
+
                     Spacer()
                 }
                 .frame(maxWidth: .infinity)
@@ -306,9 +299,9 @@ struct AIAssistView: View {
                 }
             }
 
-            Divider().background(AetherTheme.Colors.border)
+            Divider().background(AetherTheme.Colors.glassBorderSubtle)
 
-            // Chat input
+            // Chat input — glass
             HStack(spacing: AetherTheme.Spacing.md) {
                 TextField("Ask about this page...", text: $state.chatInput)
                     .textFieldStyle(.plain)
@@ -341,11 +334,17 @@ struct AIAssistView: View {
                 .foregroundColor(AetherTheme.Colors.textPrimary)
                 .padding(AetherTheme.Spacing.lg)
                 .background(
-                    message.role == "user"
-                        ? AetherTheme.Colors.accentSubtle
-                        : AetherTheme.Colors.surface
+                    RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                        .fill(
+                            message.role == "user"
+                                ? AetherTheme.Colors.accentSubtle
+                                : AetherTheme.Colors.glassSurface
+                        )
                 )
-                .cornerRadius(AetherTheme.Radius.lg)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                        .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
+                )
                 .textSelection(.enabled)
 
             if message.role != "user" { Spacer() }
@@ -374,7 +373,6 @@ struct AIAssistView: View {
             let pageURL = coordinator.currentURL?.absoluteString ?? "Unknown"
             let pageTitle = coordinator.pageTitle
 
-            // Build conversation
             let systemPrompt = """
             You are a helpful assistant analyzing a web page. Answer questions about the page content.
             Page Title: \(pageTitle)
@@ -455,6 +453,51 @@ struct AIAssistView: View {
                         state.error = error.localizedDescription
                     }
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Action Card Button
+
+private struct ActionCardButton: View {
+    let action: AIAssistState.AIAction
+    let onTap: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: AetherTheme.Spacing.lg) {
+                Image(systemName: action.icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(AetherTheme.Colors.accent)
+                    .frame(width: 24)
+
+                Text(action.rawValue)
+                    .font(AetherTheme.Typography.body)
+                    .foregroundColor(AetherTheme.Colors.textPrimary)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10))
+                    .foregroundColor(AetherTheme.Colors.textTertiary)
+            }
+            .padding(AetherTheme.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
+                    .fill(isHovering ? AetherTheme.Colors.glassHover : AetherTheme.Colors.glassSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
+                    .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(AetherTheme.Animation.fast) {
+                isHovering = hovering
             }
         }
     }

@@ -75,12 +75,19 @@ public struct OnboardingView: View {
 
     private var welcomeStep: some View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
-            Image(systemName: "globe.desk")
-                .font(.system(size: 56))
-                .foregroundColor(AetherTheme.Colors.accent)
+            ZStack {
+                Circle()
+                    .fill(AetherTheme.Colors.accentGlow)
+                    .frame(width: 100, height: 100)
+                    .blur(radius: 25)
+
+                Image(systemName: "globe.desk")
+                    .font(.system(size: 50, weight: .thin))
+                    .foregroundColor(AetherTheme.Colors.accent)
+            }
 
             Text("Aether")
-                .font(.system(size: 48, weight: .bold, design: .default))
+                .font(.system(size: 44, weight: .bold, design: .rounded))
                 .foregroundColor(AetherTheme.Colors.textPrimary)
 
             Text("A cognitive browser for macOS")
@@ -154,12 +161,15 @@ public struct OnboardingView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(AetherTheme.Spacing.xl)
-        .background(AetherTheme.Colors.surface)
-        .cornerRadius(AetherTheme.Radius.lg)
-        .overlay(
-            RoundedRectangle(cornerRadius: AetherTheme.Radius.lg)
-                .strokeBorder(AetherTheme.Colors.border, lineWidth: 0.5)
+        .background(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                .fill(AetherTheme.Colors.glassCard)
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                .strokeBorder(AetherTheme.Colors.glassBorder, lineWidth: 0.5)
+        )
+        .shadow(color: AetherTheme.Colors.shadowSubtle, radius: 8, x: 0, y: 2)
     }
 
     // MARK: - AI Setup
@@ -249,9 +259,16 @@ public struct OnboardingView: View {
 
     private var readyStep: some View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
-                .foregroundColor(AetherTheme.Colors.success)
+            ZStack {
+                Circle()
+                    .fill(AetherTheme.Colors.success.opacity(0.2))
+                    .frame(width: 80, height: 80)
+                    .blur(radius: 20)
+
+                Image(systemName: "checkmark.circle")
+                    .font(.system(size: 42, weight: .thin))
+                    .foregroundColor(AetherTheme.Colors.success)
+            }
 
             Text("You're all set")
                 .font(AetherTheme.Typography.title)
@@ -283,7 +300,7 @@ public struct OnboardingView: View {
                 .foregroundColor(AetherTheme.Colors.textSecondary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 3)
-                .background(AetherTheme.Colors.surfaceElevated)
+                .background(AetherTheme.Colors.glassSurface)
                 .cornerRadius(AetherTheme.Radius.sm)
                 .frame(width: 70, alignment: .trailing)
 

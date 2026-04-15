@@ -14,6 +14,11 @@ DerivedData/
 *.swp
 *~
 
+# Build intermediates (keep DMG and entitlements)
+build/Aether.app/
+build/dmg_staging/
+build/*.sparseimage
+
 # IDE
 .vscode/
 .idea/

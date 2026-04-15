@@ -43,7 +43,10 @@ public final class EmbeddingRepository: @unchecked Sendable {
     }
 
     public func delete(sourceId: UUID) throws {
-        try db.execute("DELETE FROM embeddings WHERE source_id = '\(sourceId.uuidString)'")
+        try db.insert(
+            "DELETE FROM embeddings WHERE source_id = ?",
+            params: [.text(sourceId.uuidString)]
+        )
     }
 
     private static func rowToRecord(_ row: [String: DatabaseValue]) -> EmbeddingRecord? {

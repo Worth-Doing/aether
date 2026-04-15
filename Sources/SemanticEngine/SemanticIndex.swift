@@ -2,6 +2,7 @@ import Foundation
 import AetherCore
 import AIService
 import Persistence
+import Accelerate
 
 public actor SemanticIndex: SemanticSearchable {
     private let embeddingService: EmbeddingService
@@ -64,7 +65,7 @@ public actor SemanticIndex: SemanticSearchable {
 
         var scored: [(record: EmbeddingRecord, score: Float)] = []
         for record in allEmbeddings {
-            let similarity = cosineSimilarity(queryVector, record.vector)
+            let similarity = cosineSimilarityAccelerate(queryVector, record.vector)
             scored.append((record, similarity))
         }
 
@@ -85,18 +86,19 @@ public actor SemanticIndex: SemanticSearchable {
         }
     }
 
-    // MARK: - Vector Math
+    // MARK: - Vector Math (Accelerate-optimized)
 
-    private nonisolated func cosineSimilarity(_ a: [Float], _ b: [Float]) -> Float {
+    private nonisolated func cosineSimilarityAccelerate(_ a: [Float], _ b: [Float]) -> Float {
         guard a.count == b.count, !a.isEmpty else { return 0 }
+
         var dot: Float = 0
         var normA: Float = 0
         var normB: Float = 0
-        for i in 0..<a.count {
-            dot += a[i] * b[i]
-            normA += a[i] * a[i]
-            normB += b[i] * b[i]
-        }
+
+        vDSP_dotpr(a, 1, b, 1, &dot, vDSP_Length(a.count))
+        vDSP_dotpr(a, 1, a, 1, &normA, vDSP_Length(a.count))
+        vDSP_dotpr(b, 1, b, 1, &normB, vDSP_Length(b.count))
+
         let denom = sqrt(normA) * sqrt(normB)
         guard denom > 0 else { return 0 }
         return dot / denom

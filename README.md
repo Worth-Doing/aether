@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-blue" alt="macOS 14+" />
   <img src="https://img.shields.io/badge/Swift-5.9-orange" alt="Swift 5.9" />
-  <img src="https://img.shields.io/badge/version-0.2.0-green" alt="v0.2.0" />
+  <img src="https://img.shields.io/badge/version-0.3.0-green" alt="v0.3.0" />
   <img src="https://img.shields.io/badge/notarized-Apple-black" alt="Notarized" />
 </p>
 
@@ -45,22 +45,45 @@ Three layers working together:
 
 > Signed and notarized with Apple Developer ID. No Gatekeeper warnings.
 
-## What's New in v0.2.0
+## What's New in v0.3.0
 
-- **Light mode by default** — Adaptive theme system with Light / Dark / System modes
-- **Find in Page** — `Cmd+F` with forward/backward navigation
-- **Zoom controls** — `Cmd+/−` and `Cmd+0` with toolbar indicator
-- **Tab pinning** — Pin important tabs via right-click context menu
-- **AI Chat mode** — Multi-turn conversations about the current page
-- **11 command palette commands** — Settings, zoom, find, workspaces, and more
-- **Configurable search engine** — DuckDuckGo, Google, Bing, or Brave
-- **Tabbed Settings** — General, Appearance, AI, Privacy & Data, About
-- **History grouped by date** — Today, Yesterday, This Week, Earlier
-- **Bookmark folders** — Collapsible folder display in sidebar
-- **Status bar** — HTTPS indicator, zoom level, tab count
-- **Semantic auto-indexing** — History automatically indexed for concept search
-- **New app icon** — Premium abstract sphere with signature open ring
-- **Context menus** — Right-click on tabs, bookmarks, and history entries
+### Glass UI Redesign (iOS 26 Aesthetic)
+- **Glassmorphism throughout** — Frosted blur, translucent panels, depth hierarchy
+- **NSVisualEffectView integration** — Real macOS vibrancy materials on toolbar, sidebar, command bar, AI panel
+- **Glass design tokens** — 15 new adaptive glass colors (`glassBackground`, `glassSurface`, `glassCard`, `glassBorder`, etc.)
+- **Gradient borders** — Top-to-bottom gradient stroke on floating elements
+- **Glow effects** — Accent-colored blur circles behind icons on empty states
+- **Press animations** — Scale-down spring animation on all interactive glass components
+- **Spring-dominant motion** — Replaced ease-in-out with physics-based spring curves
+
+### New Components
+- **GlassIconButton** — Icon button with glass hover state, press scale, and accessibility label
+- **GlassCard** — Hover-responsive frosted card with gradient border
+- **GlassCommandCard** — Floating command bar with deep shadow and blur
+- **VisualEffectBlur** — NSVisualEffectView wrapper for SwiftUI
+- **View modifiers** — `.glassBackground()`, `.glassCard()`, `.glassPanel()`, `.glassToolbar()`
+
+### Toast Notification System
+- **ToastManager** — Observable toast system with auto-dismiss (2.5s)
+- **Glass toast capsule** — Frosted pill with icon, message, and color-coded glow
+- **Bookmark feedback** — "Bookmark added" / "Bookmark removed" toasts
+
+### Security Fixes
+- **Fixed 3 SQL injection vulnerabilities** — DELETE operations now use parameterized queries
+- **KVO memory leak fix** — WebViewCoordinator now invalidates all 6 observations in `deinit`
+- **Proper error handling** — Replaced 19 silent `try?` catches with `lastError` state propagation
+
+### Feature Upgrades
+- **Workspace persistence** — Workspaces now saved to SQLite (schema was unused before)
+- **Session save on quit** — App saves workspace state on exit
+- **WorkspaceRepository** — Full CRUD for workspace persistence
+
+### Performance
+- **Accelerate-optimized vector search** — Cosine similarity uses `vDSP_dotpr` instead of manual loops
+- **Optimized URLSession** — Connection pooling with `httpMaximumConnectionsPerHost`
+
+### Previous (v0.2.0)
+- Light mode default, find in page, zoom controls, tab pinning, AI chat mode, 11 command palette commands, configurable search engine, tabbed settings, semantic auto-indexing
 
 ## Features
 

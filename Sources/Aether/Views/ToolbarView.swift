@@ -8,7 +8,7 @@ struct ToolbarView: View {
     @Bindable var tabStore: TabStore
     @Binding var showSidebar: Bool
     @State private var addressText: String = ""
-    @State private var isEditing: Bool = false
+    @State private var isAddressFocused: Bool = false
     let onCommandBar: () -> Void
     let onBookmark: () -> Void
     let onAIAssist: () -> Void
@@ -16,27 +16,39 @@ struct ToolbarView: View {
     var body: some View {
         HStack(spacing: AetherTheme.Spacing.md) {
             // Sidebar toggle
-            toolbarButton(
-                showSidebar ? "sidebar.left" : "sidebar.left",
-                enabled: true,
-                isActive: showSidebar
+            GlassIconButton(
+                icon: "sidebar.left",
+                color: showSidebar ? AetherTheme.Colors.accent : AetherTheme.Colors.textSecondary
             ) {
-                withAnimation(AetherTheme.Animation.fast) {
+                withAnimation(AetherTheme.Animation.spring) {
                     showSidebar.toggle()
                 }
             }
 
             // Navigation buttons
             HStack(spacing: AetherTheme.Spacing.xs) {
-                toolbarButton("chevron.left", enabled: coordinator?.canGoBack ?? false) {
+                GlassIconButton(
+                    icon: "chevron.left",
+                    color: coordinator?.canGoBack == true
+                        ? AetherTheme.Colors.textSecondary
+                        : AetherTheme.Colors.textTertiary
+                ) {
                     coordinator?.goBack()
                 }
-                toolbarButton("chevron.right", enabled: coordinator?.canGoForward ?? false) {
+                .disabled(!(coordinator?.canGoBack ?? false))
+
+                GlassIconButton(
+                    icon: "chevron.right",
+                    color: coordinator?.canGoForward == true
+                        ? AetherTheme.Colors.textSecondary
+                        : AetherTheme.Colors.textTertiary
+                ) {
                     coordinator?.goForward()
                 }
-                toolbarButton(
-                    coordinator?.isLoading == true ? "xmark" : "arrow.clockwise",
-                    enabled: true
+                .disabled(!(coordinator?.canGoForward ?? false))
+
+                GlassIconButton(
+                    icon: coordinator?.isLoading == true ? "xmark" : "arrow.clockwise"
                 ) {
                     if coordinator?.isLoading == true {
                         coordinator?.stopLoading()
@@ -46,7 +58,7 @@ struct ToolbarView: View {
                 }
             }
 
-            // Address bar
+            // Address bar — glass style
             HStack(spacing: AetherTheme.Spacing.md) {
                 if coordinator?.isLoading == true {
                     ProgressView()
@@ -74,13 +86,24 @@ struct ToolbarView: View {
                     }
             }
             .padding(.horizontal, AetherTheme.Spacing.lg)
-            .padding(.vertical, AetherTheme.Spacing.sm + 2)
-            .background(AetherTheme.Colors.surface)
-            .cornerRadius(AetherTheme.Radius.md)
-            .overlay(
-                RoundedRectangle(cornerRadius: AetherTheme.Radius.md)
-                    .strokeBorder(AetherTheme.Colors.border, lineWidth: 1)
+            .padding(.vertical, AetherTheme.Spacing.md - 1)
+            .background(
+                ZStack {
+                    VisualEffectBlur(material: .popover)
+                    AetherTheme.Colors.glassSurface.opacity(0.4)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
+                    .strokeBorder(
+                        isAddressFocused
+                            ? AetherTheme.Colors.accent.opacity(0.5)
+                            : AetherTheme.Colors.glassBorderSubtle,
+                        lineWidth: isAddressFocused ? 1.5 : 0.5
+                    )
+            )
+            .shadow(color: AetherTheme.Colors.shadowSubtle, radius: 4, x: 0, y: 1)
 
             // Right-side buttons
             HStack(spacing: AetherTheme.Spacing.xs) {
@@ -96,38 +119,48 @@ struct ToolbarView: View {
                             .foregroundColor(AetherTheme.Colors.textSecondary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(AetherTheme.Colors.surfaceElevated)
+                            .background(AetherTheme.Colors.glassSurface)
                             .cornerRadius(AetherTheme.Radius.sm)
                     }
                     .buttonStyle(.plain)
                 }
 
-                toolbarButton("bookmark", enabled: true, isActive: isCurrentPageBookmarked) {
+                GlassIconButton(
+                    icon: isCurrentPageBookmarked ? "bookmark.fill" : "bookmark",
+                    color: isCurrentPageBookmarked ? AetherTheme.Colors.accent : AetherTheme.Colors.textSecondary
+                ) {
                     onBookmark()
                 }
 
-                toolbarButton("sparkles", enabled: true) {
+                GlassIconButton(icon: "sparkles") {
                     onAIAssist()
                 }
 
-                toolbarButton("command", enabled: true) {
+                GlassIconButton(icon: "command") {
                     onCommandBar()
                 }
             }
         }
         .padding(.horizontal, AetherTheme.Spacing.lg)
-        .padding(.vertical, AetherTheme.Spacing.sm)
+        .padding(.vertical, AetherTheme.Spacing.md)
         .frame(height: AetherTheme.Sizes.toolbarHeight)
-        .background(AetherTheme.Colors.background)
+        .glassToolbar()
         .overlay(alignment: .bottom) {
             if let coord = coordinator, coord.isLoading {
                 GeometryReader { geo in
-                    Rectangle()
-                        .fill(AetherTheme.Colors.accent)
-                        .frame(width: geo.size.width * coord.estimatedProgress, height: 2)
-                        .animation(AetherTheme.Animation.fast, value: coord.estimatedProgress)
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [AetherTheme.Colors.accent, AetherTheme.Colors.accent.opacity(0.6)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * coord.estimatedProgress, height: 2.5)
+                        .shadow(color: AetherTheme.Colors.accentGlow, radius: 4, y: 0)
+                        .animation(AetherTheme.Animation.spring, value: coord.estimatedProgress)
                 }
-                .frame(height: 2)
+                .frame(height: 2.5)
             }
         }
         .onChange(of: tabStore.activeTab?.url) { _, newURL in
@@ -143,27 +176,5 @@ struct ToolbarView: View {
     private var isCurrentPageBookmarked: Bool {
         guard tabStore.activeTab?.url != nil else { return false }
         return false
-    }
-
-    private func toolbarButton(
-        _ icon: String,
-        enabled: Bool,
-        isActive: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Image(systemName: isActive ? "\(icon).fill" : icon)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(
-                    isActive
-                        ? AetherTheme.Colors.accent
-                        : (enabled ? AetherTheme.Colors.textSecondary : AetherTheme.Colors.textTertiary)
-                )
-                .frame(width: 30, height: 30)
-                .background(AetherTheme.Colors.surface.opacity(0.01))
-                .cornerRadius(AetherTheme.Radius.sm)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
     }
 }

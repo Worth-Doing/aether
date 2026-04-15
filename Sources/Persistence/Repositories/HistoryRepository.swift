@@ -70,7 +70,10 @@ public final class HistoryRepository: @unchecked Sendable {
     }
 
     public func delete(id: UUID) throws {
-        try db.execute("DELETE FROM history WHERE id = '\(id.uuidString)'")
+        try db.insert(
+            "DELETE FROM history WHERE id = ?",
+            params: [.text(id.uuidString)]
+        )
     }
 
     private static func rowToEntry(_ row: [String: DatabaseValue]) -> HistoryEntry? {

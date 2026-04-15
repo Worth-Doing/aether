@@ -271,9 +271,16 @@ public struct SettingsView: View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
             Spacer()
 
-            Image(systemName: "globe.desk")
-                .font(.system(size: 48))
-                .foregroundColor(AetherTheme.Colors.accent)
+            ZStack {
+                Circle()
+                    .fill(AetherTheme.Colors.accentGlow)
+                    .frame(width: 80, height: 80)
+                    .blur(radius: 20)
+
+                Image(systemName: "globe.desk")
+                    .font(.system(size: 42, weight: .thin))
+                    .foregroundColor(AetherTheme.Colors.accent)
+            }
 
             Text("Aether Browser")
                 .font(AetherTheme.Typography.title)

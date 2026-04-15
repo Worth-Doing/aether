@@ -17,7 +17,7 @@ struct PanelView: View {
             TabBarView(tabStore: tabStore, panelId: panelId)
 
             Divider()
-                .background(AetherTheme.Colors.border)
+                .background(AetherTheme.Colors.glassBorderSubtle)
 
             if let tab = panel?.activeTab,
                let coordinator = tabStore.coordinator(for: tab.id) {
@@ -29,11 +29,11 @@ struct PanelView: View {
         }
         .background(AetherTheme.Colors.background)
         .overlay(
-            RoundedRectangle(cornerRadius: 0)
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
                 .strokeBorder(
                     panelId == tabStore.activePanelId
-                        ? AetherTheme.Colors.accent.opacity(0.3)
-                        : AetherTheme.Colors.border,
+                        ? AetherTheme.Colors.accent.opacity(0.25)
+                        : AetherTheme.Colors.glassBorderSubtle,
                     lineWidth: panelId == tabStore.activePanelId ? 1.5 : 0.5
                 )
         )
@@ -46,19 +46,27 @@ struct PanelView: View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
             Spacer()
 
-            Image(systemName: "globe.desk")
-                .font(.system(size: 48))
-                .foregroundColor(AetherTheme.Colors.accent.opacity(0.4))
+            // Glowing icon
+            ZStack {
+                Circle()
+                    .fill(AetherTheme.Colors.accentGlow)
+                    .frame(width: 80, height: 80)
+                    .blur(radius: 20)
+
+                Image(systemName: "globe.desk")
+                    .font(.system(size: 42, weight: .thin))
+                    .foregroundColor(AetherTheme.Colors.accent.opacity(0.6))
+            }
 
             Text("Aether")
-                .font(.system(size: 28, weight: .bold, design: .default))
+                .font(AetherTheme.Typography.largeTitle)
                 .foregroundColor(AetherTheme.Colors.textTertiary)
 
             Text("Search or enter a URL to get started")
                 .font(AetherTheme.Typography.body)
                 .foregroundColor(AetherTheme.Colors.textTertiary)
 
-            // Quick shortcuts
+            // Quick shortcuts — glass cards
             VStack(spacing: AetherTheme.Spacing.md) {
                 shortcutRow("New Tab", key: "T")
                 shortcutRow("Command Palette", key: "K")
@@ -95,11 +103,13 @@ struct PanelView: View {
             .foregroundColor(AetherTheme.Colors.textSecondary)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(AetherTheme.Colors.surfaceElevated)
-            .cornerRadius(AetherTheme.Radius.sm)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
+                    .fill(AetherTheme.Colors.glassSurface)
+            )
             .overlay(
-                RoundedRectangle(cornerRadius: AetherTheme.Radius.sm)
-                    .strokeBorder(AetherTheme.Colors.border, lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
+                    .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
             )
     }
 }

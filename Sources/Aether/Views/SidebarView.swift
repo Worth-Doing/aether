@@ -22,11 +22,11 @@ struct SidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Section picker
+            // Section picker — glass pills
             HStack(spacing: 2) {
                 ForEach(SidebarSection.allCases, id: \.self) { section in
                     Button {
-                        withAnimation(AetherTheme.Animation.fast) {
+                        withAnimation(AetherTheme.Animation.spring) {
                             selectedSection = section
                         }
                     } label: {
@@ -44,11 +44,13 @@ struct SidebarView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, AetherTheme.Spacing.md)
                         .background(
-                            selectedSection == section
-                                ? AetherTheme.Colors.accentSubtle
-                                : Color.clear
+                            RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                                .fill(
+                                    selectedSection == section
+                                        ? AetherTheme.Colors.accentSubtle
+                                        : Color.clear
+                                )
                         )
-                        .cornerRadius(AetherTheme.Radius.sm)
                     }
                     .buttonStyle(.plain)
                 }
@@ -57,7 +59,7 @@ struct SidebarView: View {
             .padding(.vertical, AetherTheme.Spacing.md)
 
             Divider()
-                .background(AetherTheme.Colors.border)
+                .background(AetherTheme.Colors.glassBorderSubtle)
 
             // Content
             ScrollView {
@@ -75,7 +77,7 @@ struct SidebarView: View {
             }
         }
         .frame(width: AetherTheme.Sizes.sidebarWidth)
-        .background(AetherTheme.Colors.sidebarBackground)
+        .glassPanel()
     }
 
     private func iconForSection(_ section: SidebarSection) -> String {
@@ -90,7 +92,7 @@ struct SidebarView: View {
 
     private var workspacesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Current workspace
+            // Current workspace — glass card
             HStack(spacing: AetherTheme.Spacing.md) {
                 Image(systemName: "square.grid.2x2.fill")
                     .font(.system(size: 12))
@@ -111,8 +113,14 @@ struct SidebarView: View {
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
             .padding(.vertical, AetherTheme.Spacing.md)
-            .background(AetherTheme.Colors.accentSubtle)
-            .cornerRadius(AetherTheme.Radius.sm)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
+                    .fill(AetherTheme.Colors.accentSubtle)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
+                    .strokeBorder(AetherTheme.Colors.accent.opacity(0.15), lineWidth: 0.5)
+            )
             .padding(.horizontal, AetherTheme.Spacing.md)
             .padding(.bottom, AetherTheme.Spacing.sm)
 
@@ -136,7 +144,7 @@ struct SidebarView: View {
             }
 
             Divider()
-                .background(AetherTheme.Colors.border)
+                .background(AetherTheme.Colors.glassBorderSubtle)
                 .padding(.vertical, AetherTheme.Spacing.md)
 
             // Actions
@@ -164,7 +172,6 @@ struct SidebarView: View {
                     subtitle: "Press Cmd+D to bookmark a page"
                 )
             } else {
-                // Show folders first
                 if !bookmarkManager.folders.isEmpty {
                     ForEach(bookmarkManager.folders) { folder in
                         DisclosureGroup {
@@ -187,14 +194,12 @@ struct SidebarView: View {
                         .padding(.vertical, AetherTheme.Spacing.xs)
                     }
 
-                    // Separator if there are uncategorized bookmarks
                     let uncategorized = bookmarkManager.bookmarks.filter { $0.folderId == nil }
                     if !uncategorized.isEmpty {
                         sidebarSectionHeader("Uncategorized")
                     }
                 }
 
-                // Uncategorized or all bookmarks
                 let displayBookmarks = bookmarkManager.folders.isEmpty
                     ? bookmarkManager.bookmarks
                     : bookmarkManager.bookmarks.filter { $0.folderId == nil }
@@ -297,7 +302,7 @@ struct SidebarView: View {
         VStack(spacing: AetherTheme.Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundColor(AetherTheme.Colors.textTertiary)
+                .foregroundColor(AetherTheme.Colors.textTertiary.opacity(0.6))
             Text(title)
                 .font(AetherTheme.Typography.caption)
                 .foregroundColor(AetherTheme.Colors.textTertiary)
@@ -320,8 +325,14 @@ struct SidebarView: View {
             .foregroundColor(AetherTheme.Colors.textSecondary)
             .padding(.horizontal, AetherTheme.Spacing.md)
             .padding(.vertical, AetherTheme.Spacing.sm)
-            .background(AetherTheme.Colors.surfaceElevated)
-            .cornerRadius(AetherTheme.Radius.sm)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .fill(AetherTheme.Colors.glassSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
+            )
         }
         .buttonStyle(.plain)
     }
@@ -341,13 +352,30 @@ struct SidebarView: View {
         subtitle: String? = nil,
         action: (() -> Void)? = nil
     ) -> some View {
+        SidebarRowView(icon: icon, title: title, subtitle: subtitle, action: action)
+    }
+}
+
+// MARK: - Sidebar Row with Hover
+
+private struct SidebarRowView: View {
+    let icon: String
+    let title: String
+    let subtitle: String?
+    let action: (() -> Void)?
+
+    @State private var isHovering = false
+
+    var body: some View {
         Button {
             action?()
         } label: {
             HStack(spacing: AetherTheme.Spacing.md) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                    .foregroundColor(
+                        isHovering ? AetherTheme.Colors.accent : AetherTheme.Colors.textTertiary
+                    )
                     .frame(width: 18)
 
                 VStack(alignment: .leading, spacing: 1) {
@@ -368,8 +396,18 @@ struct SidebarView: View {
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
             .padding(.vertical, AetherTheme.Spacing.sm + 1)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .fill(isHovering ? AetherTheme.Colors.glassHover : .clear)
+                    .padding(.horizontal, AetherTheme.Spacing.sm)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(AetherTheme.Animation.fast) {
+                isHovering = hovering
+            }
+        }
     }
 }

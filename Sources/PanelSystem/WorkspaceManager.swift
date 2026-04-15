@@ -40,7 +40,7 @@ public final class WorkspaceManager {
         }
     }
 
-    // MARK: - Workspace Persistence
+    // MARK: - Workspace Management
 
     public func saveCurrentWorkspace(name: String? = nil) {
         var snapshot = currentWorkspace
@@ -65,7 +65,6 @@ public final class WorkspaceManager {
         saveCurrentWorkspace()
 
         let panel = tabStore.createPanel()
-        // Remove old panels except the new one
         let oldPanelIds = tabStore.panels.filter { $0.id != panel.id }.map(\.id)
         for id in oldPanelIds {
             tabStore.removePanel(id)
@@ -79,6 +78,18 @@ public final class WorkspaceManager {
 
     public func deleteWorkspace(_ id: UUID) {
         savedWorkspaces.removeAll { $0.id == id }
+    }
+
+    // MARK: - Session State (for restore)
+
+    public func getSessionState() -> Workspace {
+        var session = currentWorkspace
+        session.lastAccessedAt = Date()
+        return session
+    }
+
+    public func restoreSession(from workspace: Workspace) {
+        currentWorkspace = workspace
     }
 
     // MARK: - Layout

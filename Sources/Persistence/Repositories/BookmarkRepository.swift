@@ -46,7 +46,10 @@ public final class BookmarkRepository: @unchecked Sendable {
     }
 
     public func delete(id: UUID) throws {
-        try db.execute("DELETE FROM bookmarks WHERE id = '\(id.uuidString)'")
+        try db.insert(
+            "DELETE FROM bookmarks WHERE id = ?",
+            params: [.text(id.uuidString)]
+        )
     }
 
     // MARK: - Folders

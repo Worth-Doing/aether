@@ -168,7 +168,7 @@ public struct CommandBarView: View {
                     .foregroundColor(AetherTheme.Colors.textTertiary)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(AetherTheme.Colors.surfaceElevated)
+                    .background(AetherTheme.Colors.glassSurface)
                     .cornerRadius(AetherTheme.Radius.sm)
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
@@ -176,7 +176,7 @@ public struct CommandBarView: View {
 
             if !state.results.isEmpty {
                 Divider()
-                    .background(AetherTheme.Colors.border)
+                    .background(AetherTheme.Colors.glassBorderSubtle)
 
                 ScrollViewReader { proxy in
                     ScrollView {
@@ -225,18 +225,35 @@ public struct CommandBarView: View {
             } else if state.query.isEmpty {
                 // Quick commands when empty
                 VStack(spacing: 0) {
-                    Divider().background(AetherTheme.Colors.border)
+                    Divider().background(AetherTheme.Colors.glassBorderSubtle)
                     quickCommandsView
                 }
             }
         }
-        .background(AetherTheme.Colors.surface)
-        .cornerRadius(AetherTheme.Radius.xl)
-        .overlay(
-            RoundedRectangle(cornerRadius: AetherTheme.Radius.xl)
-                .strokeBorder(AetherTheme.Colors.borderFocused, lineWidth: 1)
+        .background(
+            ZStack {
+                VisualEffectBlur(material: .popover)
+                AetherTheme.Colors.glassBackground.opacity(0.5)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: AetherTheme.Radius.xxl, style: .continuous))
         )
-        .shadow(color: AetherTheme.Colors.shadowColor, radius: 20, y: 8)
+        .overlay(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.xxl, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            AetherTheme.Colors.glassBorder,
+                            AetherTheme.Colors.glassBorderSubtle
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 0.5
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: AetherTheme.Radius.xxl, style: .continuous))
+        .shadow(color: AetherTheme.Colors.shadowDeep, radius: 40, y: 16)
+        .shadow(color: AetherTheme.Colors.shadowColor, radius: 8, y: 2)
         .frame(width: AetherTheme.Sizes.commandBarWidth)
     }
 
@@ -290,7 +307,7 @@ public struct CommandBarView: View {
                     .foregroundColor(AetherTheme.Colors.textTertiary)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(AetherTheme.Colors.surfaceElevated)
+                    .background(AetherTheme.Colors.glassSurface)
                     .cornerRadius(AetherTheme.Radius.sm)
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
@@ -504,6 +521,10 @@ struct CommandResultRow: View {
         }
         .padding(.horizontal, AetherTheme.Spacing.xl)
         .padding(.vertical, AetherTheme.Spacing.md)
-        .background(isSelected ? AetherTheme.Colors.accentSubtle : Color.clear)
+        .background(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                .fill(isSelected ? AetherTheme.Colors.accentSubtle : .clear)
+                .padding(.horizontal, AetherTheme.Spacing.sm)
+        )
     }
 }

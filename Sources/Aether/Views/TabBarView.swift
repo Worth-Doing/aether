@@ -14,9 +14,8 @@ struct TabBarView: View {
     var body: some View {
         HStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 1) {
+                HStack(spacing: 2) {
                     if let panel {
-                        // Pinned tabs first
                         let pinned = panel.tabs.filter { $0.isPinned }
                         let unpinned = panel.tabs.filter { !$0.isPinned }
 
@@ -55,6 +54,7 @@ struct TabBarView: View {
                         }
                     }
                 }
+                .padding(.leading, AetherTheme.Spacing.sm)
             }
 
             Spacer()
@@ -65,27 +65,25 @@ struct TabBarView: View {
                 Image(systemName: "plus")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .frame(width: 26, height: 26)
-                    .background(AetherTheme.Colors.surfaceHover.opacity(0.01))
-                    .cornerRadius(AetherTheme.Radius.sm)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
+                            .fill(AetherTheme.Colors.glassSurface.opacity(0.01))
+                    )
             }
             .buttonStyle(.plain)
             .padding(.trailing, AetherTheme.Spacing.md)
         }
         .frame(height: AetherTheme.Sizes.tabBarHeight)
-        .background(AetherTheme.Colors.background)
+        .background(AetherTheme.Colors.background.opacity(0.6))
     }
 
     @ViewBuilder
     private func tabContextMenu(for tab: AetherCore.Tab) -> some View {
         if tab.isPinned {
-            Button("Unpin Tab") {
-                tab.isPinned = false
-            }
+            Button("Unpin Tab") { tab.isPinned = false }
         } else {
-            Button("Pin Tab") {
-                tab.isPinned = true
-            }
+            Button("Pin Tab") { tab.isPinned = true }
         }
 
         Divider()
@@ -136,6 +134,8 @@ struct PinnedTabView: View {
     let isFocusedPanel: Bool
     let onSelect: () -> Void
 
+    @State private var isHovering = false
+
     var body: some View {
         Button(action: onSelect) {
             Group {
@@ -153,16 +153,30 @@ struct PinnedTabView: View {
                         .foregroundColor(AetherTheme.Colors.textTertiary)
                 }
             }
-            .frame(width: 32, height: 28)
+            .frame(width: 34, height: 28)
             .background(
-                isActive
-                    ? (isFocusedPanel ? AetherTheme.Colors.tabActive : AetherTheme.Colors.surface)
-                    : Color.clear
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .fill(
+                        isActive
+                            ? AetherTheme.Colors.glassActive
+                            : (isHovering ? AetherTheme.Colors.glassHover : Color.clear)
+                    )
             )
-            .cornerRadius(AetherTheme.Radius.sm)
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .strokeBorder(
+                        isActive ? AetherTheme.Colors.glassBorder : .clear,
+                        lineWidth: 0.5
+                    )
+            )
         }
         .buttonStyle(.plain)
         .help(tab.displayTitle)
+        .onHover { hovering in
+            withAnimation(AetherTheme.Animation.fast) {
+                isHovering = hovering
+            }
+        }
     }
 }
 
@@ -210,11 +224,9 @@ struct TabItemView: View {
                         .foregroundColor(AetherTheme.Colors.textTertiary)
                         .frame(width: 16, height: 16)
                         .background(
-                            isHovering
-                                ? AetherTheme.Colors.surfaceHover
-                                : Color.clear
+                            RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
+                                .fill(isHovering ? AetherTheme.Colors.glassHover : .clear)
                         )
-                        .cornerRadius(AetherTheme.Radius.sm)
                 }
                 .buttonStyle(.plain)
             }
@@ -223,13 +235,24 @@ struct TabItemView: View {
         .padding(.vertical, AetherTheme.Spacing.sm)
         .frame(maxWidth: 200)
         .background(
-            isActive
-                ? (isFocusedPanel ? AetherTheme.Colors.tabActive : AetherTheme.Colors.surface)
-                : (isHovering ? AetherTheme.Colors.surfaceHover.opacity(0.5) : Color.clear)
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                .fill(
+                    isActive
+                        ? AetherTheme.Colors.glassActive
+                        : (isHovering ? AetherTheme.Colors.glassHover : Color.clear)
+                )
         )
-        .cornerRadius(AetherTheme.Radius.sm)
+        .overlay(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                .strokeBorder(
+                    isActive ? AetherTheme.Colors.glassBorder : .clear,
+                    lineWidth: 0.5
+                )
+        )
         .onHover { hovering in
-            isHovering = hovering
+            withAnimation(AetherTheme.Animation.fast) {
+                isHovering = hovering
+            }
         }
         .onTapGesture {
             onSelect()
