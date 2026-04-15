@@ -75,6 +75,10 @@ public struct OnboardingView: View {
 
     private var welcomeStep: some View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
+            Image(systemName: "globe.desk")
+                .font(.system(size: 56))
+                .foregroundColor(AetherTheme.Colors.accent)
+
             Text("Aether")
                 .font(.system(size: 48, weight: .bold, design: .default))
                 .foregroundColor(AetherTheme.Colors.textPrimary)
@@ -119,8 +123,8 @@ public struct OnboardingView: View {
                 )
                 featureCard(
                     icon: "brain",
-                    title: "Semantic Memory",
-                    description: "Find pages by concept, not just keywords. Optional AI-powered."
+                    title: "AI-Powered Assist",
+                    description: "Summarize pages, extract key points, and chat about content."
                 )
             }
 
@@ -152,6 +156,10 @@ public struct OnboardingView: View {
         .padding(AetherTheme.Spacing.xl)
         .background(AetherTheme.Colors.surface)
         .cornerRadius(AetherTheme.Radius.lg)
+        .overlay(
+            RoundedRectangle(cornerRadius: AetherTheme.Radius.lg)
+                .strokeBorder(AetherTheme.Colors.border, lineWidth: 0.5)
+        )
     }
 
     // MARK: - AI Setup
@@ -253,10 +261,35 @@ public struct OnboardingView: View {
                 .font(AetherTheme.Typography.body)
                 .foregroundColor(AetherTheme.Colors.textSecondary)
 
+            VStack(spacing: AetherTheme.Spacing.md) {
+                shortcutInfo("Cmd+L", "Focus address bar")
+                shortcutInfo("Cmd+K", "Command palette")
+                shortcutInfo("Cmd+T", "New tab")
+                shortcutInfo("Cmd+\\", "Split panel")
+            }
+            .padding(.top, AetherTheme.Spacing.md)
+
             AetherButton("Launch Aether") {
                 onComplete()
             }
             .padding(.top, AetherTheme.Spacing.xl)
+        }
+    }
+
+    private func shortcutInfo(_ key: String, _ description: String) -> some View {
+        HStack(spacing: AetherTheme.Spacing.lg) {
+            Text(key)
+                .font(AetherTheme.Typography.shortcut)
+                .foregroundColor(AetherTheme.Colors.textSecondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(AetherTheme.Colors.surfaceElevated)
+                .cornerRadius(AetherTheme.Radius.sm)
+                .frame(width: 70, alignment: .trailing)
+
+            Text(description)
+                .font(AetherTheme.Typography.caption)
+                .foregroundColor(AetherTheme.Colors.textTertiary)
         }
     }
 }

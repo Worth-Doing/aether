@@ -17,6 +17,11 @@ import Persistence
 struct AetherApp: App {
     @State private var hasCompletedOnboarding: Bool = false
     @State private var appState: AppState?
+    @AppStorage("themeMode") private var themeModeRaw: String = ThemeMode.light.rawValue
+
+    private var themeMode: ThemeMode {
+        ThemeMode(rawValue: themeModeRaw) ?? .light
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -29,7 +34,8 @@ struct AetherApp: App {
                             historyManager: state.historyManager,
                             bookmarkManager: state.bookmarkManager,
                             commandBarState: state.commandBarState,
-                            openRouterClient: state.openRouterClient
+                            openRouterClient: state.openRouterClient,
+                            semanticIndex: state.semanticIndex
                         )
                     } else {
                         OnboardingView(
@@ -42,12 +48,12 @@ struct AetherApp: App {
                         }
                     }
                 } else {
-                    ProgressView()
+                    ProgressView("Starting Aether...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(AetherTheme.Colors.background)
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(themeMode.colorScheme)
             .onAppear {
                 initializeApp()
             }
@@ -95,6 +101,32 @@ struct AetherApp: App {
                     }
                 }
                 .keyboardShortcut("\\", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("Zoom In") {
+                    if let tabId = appState?.tabStore.activeTab?.id,
+                       let coord = appState?.tabStore.coordinator(for: tabId) {
+                        coord.zoomIn()
+                    }
+                }
+                .keyboardShortcut("+", modifiers: .command)
+
+                Button("Zoom Out") {
+                    if let tabId = appState?.tabStore.activeTab?.id,
+                       let coord = appState?.tabStore.coordinator(for: tabId) {
+                        coord.zoomOut()
+                    }
+                }
+                .keyboardShortcut("-", modifiers: .command)
+
+                Button("Reset Zoom") {
+                    if let tabId = appState?.tabStore.activeTab?.id,
+                       let coord = appState?.tabStore.coordinator(for: tabId) {
+                        coord.zoomReset()
+                    }
+                }
+                .keyboardShortcut("0", modifiers: .command)
             }
 
             CommandMenu("Navigate") {
@@ -135,11 +167,25 @@ struct AetherApp: App {
                 .keyboardShortcut("r", modifiers: .command)
             }
 
-            CommandGroup(replacing: .appSettings) {
-                Button("Settings...") {
-                    // Settings window
+            CommandMenu("Edit") {
+                Button("Find in Page") {
+                    NotificationCenter.default.post(name: .toggleFindBar, object: nil)
                 }
-                .keyboardShortcut(",", modifiers: .command)
+                .keyboardShortcut("f", modifiers: .command)
+            }
+        }
+
+        Settings {
+            if let state = appState {
+                SettingsView(
+                    openRouterClient: state.openRouterClient,
+                    historyManager: state.historyManager,
+                    bookmarkManager: state.bookmarkManager
+                )
+                .preferredColorScheme(themeMode.colorScheme)
+            } else {
+                ProgressView()
+                    .frame(width: 500, height: 400)
             }
         }
     }
@@ -155,4 +201,11 @@ struct AetherApp: App {
             print("Failed to initialize Aether: \(error)")
         }
     }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let toggleFindBar = Notification.Name("aether.toggleFindBar")
+    static let toggleSidebar = Notification.Name("aether.toggleSidebar")
 }

@@ -5,6 +5,8 @@ public struct AetherButton: View {
     let style: Style
     let action: () -> Void
 
+    @State private var isHovering = false
+
     public enum Style {
         case primary
         case secondary
@@ -24,7 +26,7 @@ public struct AetherButton: View {
                 .foregroundColor(foregroundColor)
                 .padding(.horizontal, AetherTheme.Spacing.xl)
                 .padding(.vertical, AetherTheme.Spacing.md)
-                .background(backgroundColor)
+                .background(isHovering ? hoverBackgroundColor : backgroundColor)
                 .cornerRadius(AetherTheme.Radius.md)
                 .overlay(
                     RoundedRectangle(cornerRadius: AetherTheme.Radius.md)
@@ -32,6 +34,9 @@ public struct AetherButton: View {
                 )
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovering = hovering
+        }
     }
 
     private var foregroundColor: Color {
@@ -47,6 +52,14 @@ public struct AetherButton: View {
         case .primary: return AetherTheme.Colors.accent
         case .secondary: return AetherTheme.Colors.surfaceElevated
         case .ghost: return .clear
+        }
+    }
+
+    private var hoverBackgroundColor: Color {
+        switch style {
+        case .primary: return AetherTheme.Colors.accent.opacity(0.85)
+        case .secondary: return AetherTheme.Colors.surfaceHover
+        case .ghost: return AetherTheme.Colors.surfaceHover
         }
     }
 

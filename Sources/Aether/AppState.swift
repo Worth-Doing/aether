@@ -79,24 +79,48 @@ final class AppState {
             self.semanticIndex = nil
         }
 
-        // Wire up history recording
-        setupHistoryRecording(tabStore: tabStore, historyManager: historyManager)
+        // Wire up history recording with semantic indexing
+        setupHistoryRecording(
+            tabStore: tabStore,
+            historyManager: historyManager,
+            semanticIndex: self.semanticIndex
+        )
     }
 
-    private func setupHistoryRecording(tabStore: TabStore, historyManager: HistoryManager) {
-        // We set up navigation callbacks on each tab's coordinator
-        // This is called when the tab store creates tabs, through binding
+    private func setupHistoryRecording(
+        tabStore: TabStore,
+        historyManager: HistoryManager,
+        semanticIndex: SemanticIndex?
+    ) {
         for panel in tabStore.panels {
             for tab in panel.tabs {
                 if let coordinator = tabStore.coordinator(for: tab.id) {
-                    let sessionId = historyManager.sessionId
                     coordinator.onNavigationFinished = { [weak tab, weak historyManager] url, title in
                         tab?.url = url
                         if let title, !title.isEmpty {
                             tab?.title = title
                         }
                         tab?.isLoading = false
+
+                        // Record in history
                         historyManager?.recordVisit(url: url, title: title)
+
+                        // Index for semantic search if available
+                        if let semanticIndex, let historyManager {
+                            let entry = HistoryEntry(
+                                url: url.absoluteString,
+                                title: title,
+                                sessionId: historyManager.sessionId
+                            )
+                            Task {
+                                try? await semanticIndex.indexHistoryEntry(entry)
+                            }
+                        }
+                    }
+
+                    // Handle new tab requests from target="_blank" links
+                    coordinator.onNewTabRequested = { [weak tabStore] url in
+                        _ = tabStore?.createTab(url: url)
                     }
                 }
             }

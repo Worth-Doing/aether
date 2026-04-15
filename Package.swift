@@ -82,6 +82,7 @@ let package = Package(
                 "AetherCore",
                 "AetherUI",
                 "TabManager",
+                "PanelSystem",
                 "HistoryEngine",
                 "BookmarkEngine",
                 "SemanticEngine",
@@ -109,7 +110,14 @@ let package = Package(
         // MARK: - Settings
         .target(
             name: "Settings",
-            dependencies: ["AetherCore", "AetherUI", "AIService", "SecureStorage"]
+            dependencies: [
+                "AetherCore",
+                "AetherUI",
+                "AIService",
+                "SecureStorage",
+                "HistoryEngine",
+                "BookmarkEngine",
+            ]
         ),
 
         // MARK: - Secure Storage

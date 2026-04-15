@@ -12,12 +12,28 @@ final class AIAssistState {
     var result: String = ""
     var isLoading: Bool = false
     var error: String?
+    var chatMessages: [ChatMessage] = []
+    var chatInput: String = ""
+    var mode: Mode = .actions
+
+    enum Mode: String, CaseIterable {
+        case actions = "Actions"
+        case chat = "Chat"
+    }
+
+    struct ChatMessage: Identifiable {
+        let id = UUID()
+        let role: String
+        let content: String
+    }
 
     enum AIAction: String, CaseIterable {
         case summarize = "Summarize Page"
         case explain = "Explain Page"
         case extractActions = "Extract Action Items"
         case keyPoints = "Key Points"
+        case simplify = "Simplify Language"
+        case translate = "Translate to English"
 
         var systemPrompt: String {
             switch self {
@@ -29,6 +45,10 @@ final class AIAssistState {
                 return "You are a helpful assistant. Extract and list all action items, to-dos, or actionable steps from the following web page content. Format as a bulleted list."
             case .keyPoints:
                 return "You are a helpful assistant. Extract the key points from the following web page content. Format as a concise bulleted list of the most important facts and insights."
+            case .simplify:
+                return "You are a helpful assistant. Rewrite the key content from this web page using simpler language and shorter sentences. Make it accessible to a general audience."
+            case .translate:
+                return "You are a helpful assistant. Translate the key content of this web page to English. Maintain the original structure and meaning."
             }
         }
 
@@ -38,6 +58,8 @@ final class AIAssistState {
             case .explain: return "lightbulb"
             case .extractActions: return "checklist"
             case .keyPoints: return "list.bullet.rectangle"
+            case .simplify: return "text.badge.minus"
+            case .translate: return "globe"
             }
         }
     }
@@ -47,6 +69,11 @@ final class AIAssistState {
         isLoading = false
         error = nil
         currentAction = nil
+    }
+
+    func resetChat() {
+        chatMessages = []
+        chatInput = ""
     }
 }
 
@@ -65,6 +92,15 @@ struct AIAssistView: View {
 
                 Spacer()
 
+                // Mode picker
+                Picker("", selection: $state.mode) {
+                    ForEach(AIAssistState.Mode.allCases, id: \.self) { mode in
+                        Text(mode.rawValue).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 140)
+
                 Button {
                     state.isVisible = false
                     state.reset()
@@ -72,6 +108,7 @@ struct AIAssistView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(AetherTheme.Colors.textTertiary)
+                        .frame(width: 24, height: 24)
                 }
                 .buttonStyle(.plain)
             }
@@ -80,21 +117,31 @@ struct AIAssistView: View {
             Divider()
                 .background(AetherTheme.Colors.border)
 
-            if state.isLoading {
-                loadingView
-            } else if !state.result.isEmpty {
-                resultView
-            } else if let error = state.error {
-                errorView(error)
-            } else {
-                actionPicker
+            switch state.mode {
+            case .actions:
+                actionsMode
+            case .chat:
+                chatMode
             }
         }
-        .frame(width: 320)
+        .frame(width: 340)
         .background(AetherTheme.Colors.sidebarBackground)
     }
 
-    // MARK: - Action Picker
+    // MARK: - Actions Mode
+
+    @ViewBuilder
+    private var actionsMode: some View {
+        if state.isLoading {
+            loadingView
+        } else if !state.result.isEmpty {
+            resultView
+        } else if let error = state.error {
+            errorView(error)
+        } else {
+            actionPicker
+        }
+    }
 
     private var actionPicker: some View {
         ScrollView {
@@ -105,7 +152,7 @@ struct AIAssistView: View {
                     } label: {
                         HStack(spacing: AetherTheme.Spacing.lg) {
                             Image(systemName: action.icon)
-                                .font(.system(size: 16))
+                                .font(.system(size: 14))
                                 .foregroundColor(AetherTheme.Colors.accent)
                                 .frame(width: 24)
 
@@ -141,8 +188,6 @@ struct AIAssistView: View {
         }
     }
 
-    // MARK: - Loading
-
     private var loadingView: some View {
         VStack(spacing: AetherTheme.Spacing.xl) {
             Spacer()
@@ -156,11 +201,8 @@ struct AIAssistView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - Result
-
     private var resultView: some View {
         VStack(spacing: 0) {
-            // Action label
             if let action = state.currentAction {
                 HStack {
                     Image(systemName: action.icon)
@@ -197,7 +239,6 @@ struct AIAssistView: View {
             Divider()
                 .background(AetherTheme.Colors.border)
 
-            // Copy button
             HStack {
                 Button {
                     NSPasteboard.general.clearContents()
@@ -217,8 +258,6 @@ struct AIAssistView: View {
             .padding(AetherTheme.Spacing.lg)
         }
     }
-
-    // MARK: - Error
 
     private func errorView(_ error: String) -> some View {
         VStack(spacing: AetherTheme.Spacing.xl) {
@@ -240,7 +279,127 @@ struct AIAssistView: View {
         }
     }
 
+    // MARK: - Chat Mode
+
+    private var chatMode: some View {
+        VStack(spacing: 0) {
+            if state.chatMessages.isEmpty {
+                VStack(spacing: AetherTheme.Spacing.xl) {
+                    Spacer()
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.system(size: 32))
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                    Text("Ask anything about the current page")
+                        .font(AetherTheme.Typography.caption)
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: AetherTheme.Spacing.md) {
+                        ForEach(state.chatMessages) { msg in
+                            chatBubble(msg)
+                        }
+                    }
+                    .padding(AetherTheme.Spacing.xl)
+                }
+            }
+
+            Divider().background(AetherTheme.Colors.border)
+
+            // Chat input
+            HStack(spacing: AetherTheme.Spacing.md) {
+                TextField("Ask about this page...", text: $state.chatInput)
+                    .textFieldStyle(.plain)
+                    .font(AetherTheme.Typography.body)
+                    .foregroundColor(AetherTheme.Colors.textPrimary)
+                    .onSubmit { sendChatMessage() }
+
+                Button(action: sendChatMessage) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(
+                            state.chatInput.isEmpty || !openRouterClient.isConfigured
+                                ? AetherTheme.Colors.textTertiary
+                                : AetherTheme.Colors.accent
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(state.chatInput.isEmpty || !openRouterClient.isConfigured)
+            }
+            .padding(AetherTheme.Spacing.lg)
+        }
+    }
+
+    private func chatBubble(_ message: AIAssistState.ChatMessage) -> some View {
+        HStack {
+            if message.role == "user" { Spacer() }
+
+            Text(message.content)
+                .font(AetherTheme.Typography.body)
+                .foregroundColor(AetherTheme.Colors.textPrimary)
+                .padding(AetherTheme.Spacing.lg)
+                .background(
+                    message.role == "user"
+                        ? AetherTheme.Colors.accentSubtle
+                        : AetherTheme.Colors.surface
+                )
+                .cornerRadius(AetherTheme.Radius.lg)
+                .textSelection(.enabled)
+
+            if message.role != "user" { Spacer() }
+        }
+    }
+
     // MARK: - Actions
+
+    private func sendChatMessage() {
+        let input = state.chatInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !input.isEmpty, openRouterClient.isConfigured else { return }
+
+        state.chatMessages.append(.init(role: "user", content: input))
+        state.chatInput = ""
+
+        guard let tabId = tabStore.activeTab?.id,
+              let coordinator = tabStore.coordinator(for: tabId) else {
+            state.chatMessages.append(.init(role: "assistant", content: "No active page to analyze."))
+            return
+        }
+
+        coordinator.extractPageText { pageText in
+            let text = pageText ?? "No content available"
+            let truncated = String(text.prefix(6000))
+
+            let pageURL = coordinator.currentURL?.absoluteString ?? "Unknown"
+            let pageTitle = coordinator.pageTitle
+
+            // Build conversation
+            let systemPrompt = """
+            You are a helpful assistant analyzing a web page. Answer questions about the page content.
+            Page Title: \(pageTitle)
+            Page URL: \(pageURL)
+            Page Content (truncated): \(truncated)
+            """
+
+            Task {
+                do {
+                    let result = try await openRouterClient.complete(
+                        prompt: input,
+                        model: nil,
+                        system: systemPrompt
+                    )
+                    await MainActor.run {
+                        state.chatMessages.append(.init(role: "assistant", content: result))
+                    }
+                } catch {
+                    await MainActor.run {
+                        state.chatMessages.append(.init(role: "assistant", content: "Error: \(error.localizedDescription)"))
+                    }
+                }
+            }
+        }
+    }
 
     private func performAction(_ action: AIAssistState.AIAction) {
         guard openRouterClient.isConfigured else {

@@ -2,6 +2,7 @@ import SwiftUI
 import AetherCore
 import AetherUI
 import TabManager
+import PanelSystem
 import HistoryEngine
 import BookmarkEngine
 
@@ -9,7 +10,7 @@ public enum CommandResult: Identifiable {
     case tab(AetherCore.Tab)
     case historyEntry(HistoryEntry)
     case bookmark(Bookmark)
-    case command(name: String, action: () -> Void)
+    case command(name: String, icon: String, shortcut: String?, action: () -> Void)
     case url(String)
 
     public var id: String {
@@ -17,17 +18,17 @@ public enum CommandResult: Identifiable {
         case .tab(let t): return "tab-\(t.id)"
         case .historyEntry(let h): return "history-\(h.id)"
         case .bookmark(let b): return "bookmark-\(b.id)"
-        case .command(let name, _): return "cmd-\(name)"
+        case .command(let name, _, _, _): return "cmd-\(name)"
         case .url(let u): return "url-\(u)"
         }
     }
 
     public var title: String {
         switch self {
-        case .tab(let t): return t.title
+        case .tab(let t): return t.displayTitle
         case .historyEntry(let h): return h.title ?? h.url
         case .bookmark(let b): return b.title
-        case .command(let name, _): return name
+        case .command(let name, _, _, _): return name
         case .url(let u): return u
         }
     }
@@ -37,8 +38,8 @@ public enum CommandResult: Identifiable {
         case .tab(let t): return t.url?.host()
         case .historyEntry(let h): return h.url
         case .bookmark(let b): return b.url
-        case .command: return "Command"
-        case .url: return "Navigate"
+        case .command(_, _, let shortcut, _): return shortcut ?? "Command"
+        case .url: return "Navigate or search"
         }
     }
 
@@ -47,8 +48,18 @@ public enum CommandResult: Identifiable {
         case .tab: return "square.on.square"
         case .historyEntry: return "clock"
         case .bookmark: return "bookmark"
-        case .command: return "command"
+        case .command(_, let icon, _, _): return icon
         case .url: return "globe"
+        }
+    }
+
+    public var sectionName: String {
+        switch self {
+        case .tab: return "Tabs"
+        case .historyEntry: return "History"
+        case .bookmark: return "Bookmarks"
+        case .command: return "Commands"
+        case .url: return "Navigate"
         }
     }
 }
@@ -93,6 +104,9 @@ public struct CommandBarView: View {
     let onSelectTab: (UUID, UUID) -> Void
     let onSplitH: () -> Void
     let onSplitV: () -> Void
+    var onShowSettings: (() -> Void)?
+    var onToggleFindBar: (() -> Void)?
+    weak var workspaceManager: WorkspaceManager?
 
     public init(
         state: CommandBarState,
@@ -102,7 +116,10 @@ public struct CommandBarView: View {
         onNavigate: @escaping (String) -> Void,
         onSelectTab: @escaping (UUID, UUID) -> Void,
         onSplitH: @escaping () -> Void,
-        onSplitV: @escaping () -> Void
+        onSplitV: @escaping () -> Void,
+        onShowSettings: (() -> Void)? = nil,
+        onToggleFindBar: (() -> Void)? = nil,
+        workspaceManager: WorkspaceManager? = nil
     ) {
         self.state = state
         self.tabStore = tabStore
@@ -112,6 +129,9 @@ public struct CommandBarView: View {
         self.onSelectTab = onSelectTab
         self.onSplitH = onSplitH
         self.onSplitV = onSplitV
+        self.onShowSettings = onShowSettings
+        self.onToggleFindBar = onToggleFindBar
+        self.workspaceManager = workspaceManager
     }
 
     public var body: some View {
@@ -122,7 +142,7 @@ public struct CommandBarView: View {
                     .foregroundColor(AetherTheme.Colors.textTertiary)
                     .font(.system(size: 16))
 
-                TextField("Search tabs, history, bookmarks, or enter URL...", text: $state.query)
+                TextField("Search tabs, history, bookmarks, or type a command...", text: $state.query)
                     .textFieldStyle(.plain)
                     .font(AetherTheme.Typography.commandBar)
                     .foregroundColor(AetherTheme.Colors.textPrimary)
@@ -141,9 +161,18 @@ public struct CommandBarView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                // Escape hint
+                Text("ESC")
+                    .font(AetherTheme.Typography.shortcut)
+                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(AetherTheme.Colors.surfaceElevated)
+                    .cornerRadius(AetherTheme.Radius.sm)
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
-            .padding(.vertical, AetherTheme.Spacing.lg)
+            .padding(.vertical, AetherTheme.Spacing.lg + 2)
 
             if !state.results.isEmpty {
                 Divider()
@@ -152,15 +181,36 @@ public struct CommandBarView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 0) {
-                            ForEach(Array(state.results.enumerated()), id: \.element.id) { index, result in
-                                CommandResultRow(
-                                    result: result,
-                                    isSelected: index == state.selectedIndex
-                                )
-                                .id(index)
-                                .onTapGesture {
-                                    state.selectedIndex = index
-                                    executeSelected()
+                            let sections = groupResultsBySections(state.results)
+
+                            ForEach(sections, id: \.0) { sectionName, sectionResults in
+                                // Section header
+                                HStack {
+                                    Text(sectionName.uppercased())
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, AetherTheme.Spacing.xl)
+                                .padding(.top, AetherTheme.Spacing.md)
+                                .padding(.bottom, AetherTheme.Spacing.xs)
+
+                                ForEach(Array(sectionResults.enumerated()), id: \.element.id) { localIndex, result in
+                                    let globalIndex = globalIndexFor(
+                                        sectionName: sectionName,
+                                        localIndex: localIndex,
+                                        sections: sections
+                                    )
+
+                                    CommandResultRow(
+                                        result: result,
+                                        isSelected: globalIndex == state.selectedIndex
+                                    )
+                                    .id(globalIndex)
+                                    .onTapGesture {
+                                        state.selectedIndex = globalIndex
+                                        executeSelected()
+                                    }
                                 }
                             }
                         }
@@ -172,17 +222,117 @@ public struct CommandBarView: View {
                         }
                     }
                 }
+            } else if state.query.isEmpty {
+                // Quick commands when empty
+                VStack(spacing: 0) {
+                    Divider().background(AetherTheme.Colors.border)
+                    quickCommandsView
+                }
             }
         }
-        .background(AetherTheme.Colors.surfaceElevated)
+        .background(AetherTheme.Colors.surface)
         .cornerRadius(AetherTheme.Radius.xl)
         .overlay(
             RoundedRectangle(cornerRadius: AetherTheme.Radius.xl)
                 .strokeBorder(AetherTheme.Colors.borderFocused, lineWidth: 1)
         )
-        .shadow(color: .black.opacity(0.4), radius: 20, y: 8)
+        .shadow(color: AetherTheme.Colors.shadowColor, radius: 20, y: 8)
         .frame(width: AetherTheme.Sizes.commandBarWidth)
     }
+
+    // MARK: - Quick Commands
+
+    private var quickCommandsView: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("QUICK ACTIONS")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                Spacer()
+            }
+            .padding(.horizontal, AetherTheme.Spacing.xl)
+            .padding(.top, AetherTheme.Spacing.md)
+            .padding(.bottom, AetherTheme.Spacing.xs)
+
+            quickCommand("New Tab", icon: "plus.square", shortcut: "Cmd+T") {
+                _ = tabStore.createTab()
+                state.hide()
+            }
+            quickCommand("Split Horizontal", icon: "rectangle.split.1x2", shortcut: "Cmd+\\") {
+                onSplitH()
+                state.hide()
+            }
+            quickCommand("Settings", icon: "gear", shortcut: "Cmd+,") {
+                onShowSettings?()
+                state.hide()
+            }
+        }
+        .padding(.bottom, AetherTheme.Spacing.md)
+    }
+
+    private func quickCommand(
+        _ title: String,
+        icon: String,
+        shortcut: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: AetherTheme.Spacing.lg) {
+                Image(systemName: icon)
+                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                    .frame(width: 20)
+                Text(title)
+                    .font(AetherTheme.Typography.body)
+                    .foregroundColor(AetherTheme.Colors.textPrimary)
+                Spacer()
+                Text(shortcut)
+                    .font(AetherTheme.Typography.shortcut)
+                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(AetherTheme.Colors.surfaceElevated)
+                    .cornerRadius(AetherTheme.Radius.sm)
+            }
+            .padding(.horizontal, AetherTheme.Spacing.xl)
+            .padding(.vertical, AetherTheme.Spacing.md)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Results Grouping
+
+    private func groupResultsBySections(_ results: [CommandResult]) -> [(String, [CommandResult])] {
+        var groups: [(String, [CommandResult])] = []
+        var seen: Set<String> = []
+
+        for result in results {
+            let section = result.sectionName
+            if !seen.contains(section) {
+                seen.insert(section)
+                let sectionResults = results.filter { $0.sectionName == section }
+                groups.append((section, sectionResults))
+            }
+        }
+        return groups
+    }
+
+    private func globalIndexFor(
+        sectionName: String,
+        localIndex: Int,
+        sections: [(String, [CommandResult])]
+    ) -> Int {
+        var offset = 0
+        for (name, results) in sections {
+            if name == sectionName {
+                return offset + localIndex
+            }
+            offset += results.count
+        }
+        return offset + localIndex
+    }
+
+    // MARK: - Search
 
     private func updateResults(query: String) {
         guard !query.isEmpty else {
@@ -192,40 +342,94 @@ public struct CommandBarView: View {
 
         var results: [CommandResult] = []
 
-        // Commands
-        if query.hasPrefix("/") {
-            let cmd = String(query.dropFirst()).lowercased()
-            if "split horizontal".contains(cmd) || "splith".contains(cmd) {
-                results.append(.command(name: "Split Panel Horizontally", action: onSplitH))
+        // Commands (prefix /)
+        if query.hasPrefix("/") || query.hasPrefix(">") {
+            let cmd = String(query.dropFirst()).lowercased().trimmingCharacters(in: .whitespaces)
+            results.append(contentsOf: matchingCommands(cmd))
+        } else {
+            // All commands that match (even without /)
+            let lowered = query.lowercased()
+
+            // Open tabs
+            let matchingTabs = tabStore.allTabs.filter {
+                $0.title.localizedCaseInsensitiveContains(query) ||
+                ($0.url?.absoluteString.localizedCaseInsensitiveContains(query) ?? false)
             }
-            if "split vertical".contains(cmd) || "splitv".contains(cmd) {
-                results.append(.command(name: "Split Panel Vertically", action: onSplitV))
-            }
-        }
+            results.append(contentsOf: matchingTabs.prefix(5).map { .tab($0) })
 
-        // Open tabs
-        let matchingTabs = tabStore.allTabs.filter {
-            $0.title.localizedCaseInsensitiveContains(query) ||
-            ($0.url?.absoluteString.localizedCaseInsensitiveContains(query) ?? false)
-        }
-        results.append(contentsOf: matchingTabs.prefix(5).map { .tab($0) })
+            // Bookmarks
+            let matchingBookmarks = bookmarkManager.search(query: query)
+            results.append(contentsOf: matchingBookmarks.prefix(5).map { .bookmark($0) })
 
-        // Bookmarks
-        let matchingBookmarks = bookmarkManager.search(query: query)
-        results.append(contentsOf: matchingBookmarks.prefix(5).map { .bookmark($0) })
+            // History
+            let matchingHistory = historyManager.search(query: query)
+            results.append(contentsOf: matchingHistory.prefix(8).map { .historyEntry($0) })
 
-        // History
-        let matchingHistory = historyManager.search(query: query)
-        results.append(contentsOf: matchingHistory.prefix(10).map { .historyEntry($0) })
+            // Matching commands
+            let commands = matchingCommands(lowered)
+            results.append(contentsOf: commands.prefix(3))
 
-        // URL or search
-        if !query.hasPrefix("/") {
+            // URL or search fallback
             results.append(.url(query))
         }
 
         state.results = results
         state.selectedIndex = 0
     }
+
+    private func matchingCommands(_ query: String) -> [CommandResult] {
+        let allCommands: [CommandResult] = [
+            .command(name: "Split Horizontal", icon: "rectangle.split.1x2", shortcut: "Cmd+\\") { onSplitH() },
+            .command(name: "Split Vertical", icon: "rectangle.split.2x1", shortcut: "Cmd+Shift+\\") { onSplitV() },
+            .command(name: "New Tab", icon: "plus.square", shortcut: "Cmd+T") { _ = tabStore.createTab() },
+            .command(name: "New Workspace", icon: "square.grid.2x2", shortcut: "Cmd+Shift+N") {
+                workspaceManager?.createNewWorkspace()
+            },
+            .command(name: "Save Workspace", icon: "square.and.arrow.down", shortcut: nil) {
+                workspaceManager?.saveCurrentWorkspace()
+            },
+            .command(name: "Settings", icon: "gear", shortcut: "Cmd+,") {
+                onShowSettings?()
+            },
+            .command(name: "Find in Page", icon: "magnifyingglass", shortcut: "Cmd+F") {
+                onToggleFindBar?()
+            },
+            .command(name: "Zoom In", icon: "plus.magnifyingglass", shortcut: "Cmd++") {
+                if let tabId = tabStore.activeTab?.id,
+                   let coord = tabStore.coordinator(for: tabId) {
+                    coord.zoomIn()
+                }
+            },
+            .command(name: "Zoom Out", icon: "minus.magnifyingglass", shortcut: "Cmd+-") {
+                if let tabId = tabStore.activeTab?.id,
+                   let coord = tabStore.coordinator(for: tabId) {
+                    coord.zoomOut()
+                }
+            },
+            .command(name: "Reset Zoom", icon: "arrow.up.left.and.arrow.down.right", shortcut: "Cmd+0") {
+                if let tabId = tabStore.activeTab?.id,
+                   let coord = tabStore.coordinator(for: tabId) {
+                    coord.zoomReset()
+                }
+            },
+            .command(name: "Reload Page", icon: "arrow.clockwise", shortcut: "Cmd+R") {
+                if let tabId = tabStore.activeTab?.id,
+                   let coord = tabStore.coordinator(for: tabId) {
+                    coord.reload()
+                }
+            },
+        ]
+
+        if query.isEmpty {
+            return allCommands
+        }
+
+        return allCommands.filter {
+            $0.title.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    // MARK: - Execution
 
     private func executeSelected() {
         guard state.selectedIndex < state.results.count else {
@@ -249,7 +453,7 @@ public struct CommandBarView: View {
             onNavigate(entry.url)
         case .bookmark(let bookmark):
             onNavigate(bookmark.url)
-        case .command(_, let action):
+        case .command(_, _, _, let action):
             action()
         case .url(let urlStr):
             onNavigate(urlStr)
@@ -257,6 +461,8 @@ public struct CommandBarView: View {
         state.hide()
     }
 }
+
+// MARK: - Result Row
 
 struct CommandResultRow: View {
     let result: CommandResult
@@ -285,13 +491,15 @@ struct CommandResultRow: View {
             Spacer()
 
             if isSelected {
-                Text("Enter")
-                    .font(AetherTheme.Typography.caption)
-                    .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(AetherTheme.Colors.surface)
-                    .cornerRadius(AetherTheme.Radius.sm)
+                HStack(spacing: 2) {
+                    Text("Enter")
+                        .font(AetherTheme.Typography.shortcut)
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(AetherTheme.Colors.surfaceElevated)
+                        .cornerRadius(AetherTheme.Radius.sm)
+                }
             }
         }
         .padding(.horizontal, AetherTheme.Spacing.xl)

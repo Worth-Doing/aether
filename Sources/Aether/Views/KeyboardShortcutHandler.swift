@@ -11,6 +11,10 @@ struct KeyboardShortcutHandler: NSViewRepresentable {
     let onSplitV: () -> Void
     let onSettings: () -> Void
     let onBookmark: () -> Void
+    var onFind: (() -> Void)?
+    var onZoomIn: (() -> Void)?
+    var onZoomOut: (() -> Void)?
+    var onZoomReset: (() -> Void)?
     let commandBarVisible: Bool
     let onCommandBarUp: () -> Void
     let onCommandBarDown: () -> Void
@@ -81,7 +85,7 @@ struct KeyboardShortcutHandler: NSViewRepresentable {
                 return true
             }
 
-            // Cmd+S (sidebar toggle)
+            // Cmd+Shift+S (sidebar toggle)
             if flags == [.command, .shift] && keyCode == 1 {
                 parent.onToggleSidebar()
                 return true
@@ -108,6 +112,30 @@ struct KeyboardShortcutHandler: NSViewRepresentable {
             // Cmd+, — Settings
             if flags == .command && keyCode == 43 {
                 parent.onSettings()
+                return true
+            }
+
+            // Cmd+F — Find in page
+            if flags == .command && keyCode == 3 {
+                parent.onFind?()
+                return true
+            }
+
+            // Cmd+= or Cmd++ — Zoom in
+            if flags == .command && keyCode == 24 {
+                parent.onZoomIn?()
+                return true
+            }
+
+            // Cmd+- — Zoom out
+            if flags == .command && keyCode == 27 {
+                parent.onZoomOut?()
+                return true
+            }
+
+            // Cmd+0 — Reset zoom
+            if flags == .command && keyCode == 29 {
+                parent.onZoomReset?()
                 return true
             }
 

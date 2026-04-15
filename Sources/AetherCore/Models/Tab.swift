@@ -13,13 +13,16 @@ public final class Tab: Identifiable {
     public var estimatedProgress: Double
     public var lastAccessed: Date
     public var workspaceId: UUID?
+    public var isPinned: Bool
+    public var zoomLevel: CGFloat
 
     public init(
         id: UUID = UUID(),
         url: URL? = nil,
         title: String = "New Tab",
         isLoading: Bool = false,
-        workspaceId: UUID? = nil
+        workspaceId: UUID? = nil,
+        isPinned: Bool = false
     ) {
         self.id = id
         self.url = url
@@ -31,6 +34,19 @@ public final class Tab: Identifiable {
         self.estimatedProgress = 0.0
         self.lastAccessed = Date()
         self.workspaceId = workspaceId
+        self.isPinned = isPinned
+        self.zoomLevel = 1.0
+    }
+
+    public var displayTitle: String {
+        if title.isEmpty || title == "New Tab" {
+            return url?.host() ?? "New Tab"
+        }
+        return title
+    }
+
+    public var domain: String? {
+        url?.host()
     }
 }
 

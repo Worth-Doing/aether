@@ -10,6 +10,8 @@ struct SidebarView: View {
     @Bindable var historyManager: HistoryManager
     @Bindable var bookmarkManager: BookmarkManager
     @State private var selectedSection: SidebarSection = .workspaces
+    @State private var workspaceName: String = ""
+    @State private var showRenameSheet: Bool = false
     let onNavigate: (String) -> Void
 
     enum SidebarSection: String, CaseIterable {
@@ -21,26 +23,32 @@ struct SidebarView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Section picker
-            HStack(spacing: 0) {
+            HStack(spacing: 2) {
                 ForEach(SidebarSection.allCases, id: \.self) { section in
                     Button {
-                        selectedSection = section
+                        withAnimation(AetherTheme.Animation.fast) {
+                            selectedSection = section
+                        }
                     } label: {
-                        Text(section.rawValue)
-                            .font(AetherTheme.Typography.captionMedium)
-                            .foregroundColor(
-                                selectedSection == section
-                                    ? AetherTheme.Colors.accent
-                                    : AetherTheme.Colors.textTertiary
-                            )
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, AetherTheme.Spacing.md)
-                            .background(
-                                selectedSection == section
-                                    ? AetherTheme.Colors.accentSubtle
-                                    : Color.clear
-                            )
-                            .cornerRadius(AetherTheme.Radius.sm)
+                        VStack(spacing: 2) {
+                            Image(systemName: iconForSection(section))
+                                .font(.system(size: 11))
+                            Text(section.rawValue)
+                                .font(.system(size: 9, weight: .medium))
+                        }
+                        .foregroundColor(
+                            selectedSection == section
+                                ? AetherTheme.Colors.accent
+                                : AetherTheme.Colors.textTertiary
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AetherTheme.Spacing.md)
+                        .background(
+                            selectedSection == section
+                                ? AetherTheme.Colors.accentSubtle
+                                : Color.clear
+                        )
+                        .cornerRadius(AetherTheme.Radius.sm)
                     }
                     .buttonStyle(.plain)
                 }
@@ -70,15 +78,43 @@ struct SidebarView: View {
         .background(AetherTheme.Colors.sidebarBackground)
     }
 
+    private func iconForSection(_ section: SidebarSection) -> String {
+        switch section {
+        case .workspaces: return "square.grid.2x2"
+        case .bookmarks: return "bookmark"
+        case .history: return "clock"
+        }
+    }
+
     // MARK: - Workspaces
 
     private var workspacesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            sidebarRow(
-                icon: "square.grid.2x2",
-                title: workspaceManager.currentWorkspace.name,
-                subtitle: "Active"
-            )
+            // Current workspace
+            HStack(spacing: AetherTheme.Spacing.md) {
+                Image(systemName: "square.grid.2x2.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(AetherTheme.Colors.accent)
+                    .frame(width: 18)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(workspaceManager.currentWorkspace.name)
+                        .font(AetherTheme.Typography.captionMedium)
+                        .foregroundColor(AetherTheme.Colors.textPrimary)
+                        .lineLimit(1)
+                    Text("Active workspace")
+                        .font(.system(size: 10))
+                        .foregroundColor(AetherTheme.Colors.accent)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, AetherTheme.Spacing.xl)
+            .padding(.vertical, AetherTheme.Spacing.md)
+            .background(AetherTheme.Colors.accentSubtle)
+            .cornerRadius(AetherTheme.Radius.sm)
+            .padding(.horizontal, AetherTheme.Spacing.md)
+            .padding(.bottom, AetherTheme.Spacing.sm)
 
             if !workspaceManager.savedWorkspaces.isEmpty {
                 sidebarSectionHeader("Saved Workspaces")
@@ -87,6 +123,15 @@ struct SidebarView: View {
                     sidebarRow(icon: "tray.2", title: workspace.name) {
                         workspaceManager.restoreWorkspace(workspace)
                     }
+                    .contextMenu {
+                        Button("Restore") {
+                            workspaceManager.restoreWorkspace(workspace)
+                        }
+                        Divider()
+                        Button("Delete", role: .destructive) {
+                            workspaceManager.deleteWorkspace(workspace.id)
+                        }
+                    }
                 }
             }
 
@@ -94,20 +139,17 @@ struct SidebarView: View {
                 .background(AetherTheme.Colors.border)
                 .padding(.vertical, AetherTheme.Spacing.md)
 
-            Button {
-                workspaceManager.createNewWorkspace()
-            } label: {
-                HStack(spacing: AetherTheme.Spacing.md) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 11))
-                    Text("New Workspace")
-                        .font(AetherTheme.Typography.caption)
+            // Actions
+            HStack(spacing: AetherTheme.Spacing.md) {
+                sidebarActionButton(icon: "plus", title: "New") {
+                    workspaceManager.createNewWorkspace()
                 }
-                .foregroundColor(AetherTheme.Colors.textTertiary)
-                .padding(.horizontal, AetherTheme.Spacing.xl)
-                .padding(.vertical, AetherTheme.Spacing.sm)
+
+                sidebarActionButton(icon: "square.and.arrow.down", title: "Save") {
+                    workspaceManager.saveCurrentWorkspace()
+                }
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, AetherTheme.Spacing.xl)
         }
     }
 
@@ -116,16 +158,67 @@ struct SidebarView: View {
     private var bookmarksSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             if bookmarkManager.bookmarks.isEmpty {
-                Text("No bookmarks yet")
-                    .font(AetherTheme.Typography.caption)
-                    .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .padding(AetherTheme.Spacing.xl)
+                emptyStateView(
+                    icon: "bookmark",
+                    title: "No bookmarks yet",
+                    subtitle: "Press Cmd+D to bookmark a page"
+                )
             } else {
-                ForEach(bookmarkManager.bookmarks) { bookmark in
-                    sidebarRow(icon: "bookmark", title: bookmark.title, subtitle: bookmark.url) {
-                        onNavigate(bookmark.url)
+                // Show folders first
+                if !bookmarkManager.folders.isEmpty {
+                    ForEach(bookmarkManager.folders) { folder in
+                        DisclosureGroup {
+                            let folderBookmarks = bookmarkManager.bookmarks.filter { $0.folderId == folder.id }
+                            ForEach(folderBookmarks) { bookmark in
+                                bookmarkRow(bookmark)
+                            }
+                        } label: {
+                            HStack(spacing: AetherTheme.Spacing.md) {
+                                Image(systemName: "folder")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(AetherTheme.Colors.textTertiary)
+                                    .frame(width: 18)
+                                Text(folder.name)
+                                    .font(AetherTheme.Typography.caption)
+                                    .foregroundColor(AetherTheme.Colors.textPrimary)
+                            }
+                        }
+                        .padding(.horizontal, AetherTheme.Spacing.xl)
+                        .padding(.vertical, AetherTheme.Spacing.xs)
+                    }
+
+                    // Separator if there are uncategorized bookmarks
+                    let uncategorized = bookmarkManager.bookmarks.filter { $0.folderId == nil }
+                    if !uncategorized.isEmpty {
+                        sidebarSectionHeader("Uncategorized")
                     }
                 }
+
+                // Uncategorized or all bookmarks
+                let displayBookmarks = bookmarkManager.folders.isEmpty
+                    ? bookmarkManager.bookmarks
+                    : bookmarkManager.bookmarks.filter { $0.folderId == nil }
+
+                ForEach(displayBookmarks) { bookmark in
+                    bookmarkRow(bookmark)
+                }
+            }
+        }
+    }
+
+    private func bookmarkRow(_ bookmark: Bookmark) -> some View {
+        sidebarRow(icon: "bookmark.fill", title: bookmark.title, subtitle: bookmark.url) {
+            onNavigate(bookmark.url)
+        }
+        .contextMenu {
+            Button("Open") { onNavigate(bookmark.url) }
+            Button("Copy URL") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(bookmark.url, forType: .string)
+            }
+            Divider()
+            Button("Delete", role: .destructive) {
+                bookmarkManager.removeBookmark(bookmark.id)
             }
         }
     }
@@ -135,25 +228,103 @@ struct SidebarView: View {
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 0) {
             if historyManager.recentHistory.isEmpty {
-                Text("No history yet")
-                    .font(AetherTheme.Typography.caption)
-                    .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .padding(AetherTheme.Spacing.xl)
+                emptyStateView(
+                    icon: "clock",
+                    title: "No history yet",
+                    subtitle: "Pages you visit will appear here"
+                )
             } else {
-                ForEach(historyManager.recentHistory) { entry in
-                    sidebarRow(
-                        icon: "clock",
-                        title: entry.title ?? entry.url,
-                        subtitle: entry.url
-                    ) {
-                        onNavigate(entry.url)
+                let grouped = groupHistoryByDate(historyManager.recentHistory)
+
+                ForEach(grouped.keys.sorted(), id: \.self) { dateKey in
+                    sidebarSectionHeader(dateKey)
+
+                    if let entries = grouped[dateKey] {
+                        ForEach(entries) { entry in
+                            sidebarRow(
+                                icon: "clock",
+                                title: entry.title ?? extractDomain(from: entry.url),
+                                subtitle: extractDomain(from: entry.url)
+                            ) {
+                                onNavigate(entry.url)
+                            }
+                            .contextMenu {
+                                Button("Open") { onNavigate(entry.url) }
+                                Button("Copy URL") {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(entry.url, forType: .string)
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
+    // MARK: - History Grouping
+
+    private func groupHistoryByDate(_ entries: [HistoryEntry]) -> [String: [HistoryEntry]] {
+        let calendar = Calendar.current
+        var groups: [String: [HistoryEntry]] = [:]
+
+        for entry in entries {
+            let key: String
+            if calendar.isDateInToday(entry.visitedAt) {
+                key = "Today"
+            } else if calendar.isDateInYesterday(entry.visitedAt) {
+                key = "Yesterday"
+            } else if let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date()),
+                      entry.visitedAt > weekAgo {
+                key = "This Week"
+            } else {
+                key = "Earlier"
+            }
+
+            groups[key, default: []].append(entry)
+        }
+
+        return groups
+    }
+
+    private func extractDomain(from url: String) -> String {
+        URL(string: url)?.host() ?? url
+    }
+
     // MARK: - Helpers
+
+    private func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
+        VStack(spacing: AetherTheme.Spacing.md) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(AetherTheme.Colors.textTertiary)
+            Text(title)
+                .font(AetherTheme.Typography.caption)
+                .foregroundColor(AetherTheme.Colors.textTertiary)
+            Text(subtitle)
+                .font(.system(size: 10))
+                .foregroundColor(AetherTheme.Colors.textTertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(AetherTheme.Spacing.xxl)
+    }
+
+    private func sidebarActionButton(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: AetherTheme.Spacing.sm) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                Text(title)
+                    .font(AetherTheme.Typography.caption)
+            }
+            .foregroundColor(AetherTheme.Colors.textSecondary)
+            .padding(.horizontal, AetherTheme.Spacing.md)
+            .padding(.vertical, AetherTheme.Spacing.sm)
+            .background(AetherTheme.Colors.surfaceElevated)
+            .cornerRadius(AetherTheme.Radius.sm)
+        }
+        .buttonStyle(.plain)
+    }
 
     private func sidebarSectionHeader(_ title: String) -> some View {
         Text(title.uppercased())

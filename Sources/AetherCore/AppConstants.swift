@@ -3,12 +3,15 @@ import Foundation
 public enum AppConstants {
     public static let appName = "Aether"
     public static let bundleIdentifier = "com.aether.browser"
+    public static let version = "0.2.0"
 
     public enum Defaults {
         public static let llmModel = "anthropic/claude-sonnet-4"
         public static let embeddingModel = "openai/text-embedding-3-small"
         public static let newTabTitle = "New Tab"
         public static let defaultWorkspaceName = "Default"
+        public static let defaultSearchEngine = "DuckDuckGo"
+        public static let defaultThemeMode = "Light"
     }
 
     public enum Keychain {
@@ -33,5 +36,16 @@ public enum AppConstants {
         public static let embeddingsEndpoint = "/embeddings"
         public static let httpReferer = "https://aether-browser.app"
         public static let appTitle = "Aether Browser"
+    }
+
+    public enum UserDefaultsKeys {
+        public static let hasCompletedOnboarding = "hasCompletedOnboarding"
+        public static let themeMode = "themeMode"
+        public static let searchEngine = "searchEngine"
+        public static let llmModel = "llmModel"
+        public static let embeddingModel = "embeddingModel"
+        public static let homePage = "homePage"
+        public static let restoreSession = "restoreSession"
+        public static let showStatusBar = "showStatusBar"
     }
 }
