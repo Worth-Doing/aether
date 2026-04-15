@@ -12,6 +12,7 @@ import Onboarding
 import Settings
 import SecureStorage
 import Persistence
+import WebSearchService
 
 @main
 struct AetherApp: App {
@@ -35,7 +36,9 @@ struct AetherApp: App {
                             bookmarkManager: state.bookmarkManager,
                             commandBarState: state.commandBarState,
                             openRouterClient: state.openRouterClient,
-                            semanticIndex: state.semanticIndex
+                            semanticIndex: state.semanticIndex,
+                            searchManager: state.searchManager,
+                            keychain: state.keychain
                         )
                     } else {
                         OnboardingView(
@@ -182,6 +185,8 @@ struct AetherApp: App {
             if let state = appState {
                 SettingsView(
                     openRouterClient: state.openRouterClient,
+                    searchManager: state.searchManager,
+                    keychain: state.keychain,
                     historyManager: state.historyManager,
                     bookmarkManager: state.bookmarkManager
                 )

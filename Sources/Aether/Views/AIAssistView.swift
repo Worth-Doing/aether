@@ -38,17 +38,17 @@ final class AIAssistState {
         var systemPrompt: String {
             switch self {
             case .summarize:
-                return "You are a helpful assistant. Summarize the following web page content concisely. Focus on the main points and key information. Be brief and clear."
+                return "You are a helpful assistant. Summarize the following web page content concisely. Use markdown formatting with headers, bullet points, and bold text for key terms. Focus on the main points and key information."
             case .explain:
-                return "You are a helpful assistant. Explain the following web page content in simple, clear terms. Break down complex concepts. Be educational but concise."
+                return "You are a helpful assistant. Explain the following web page content in simple, clear terms. Use markdown formatting with headers and bullet points. Break down complex concepts."
             case .extractActions:
-                return "You are a helpful assistant. Extract and list all action items, to-dos, or actionable steps from the following web page content. Format as a bulleted list."
+                return "You are a helpful assistant. Extract and list all action items, to-dos, or actionable steps from the following web page content. Format as a markdown checklist with - [ ] for each item."
             case .keyPoints:
-                return "You are a helpful assistant. Extract the key points from the following web page content. Format as a concise bulleted list of the most important facts and insights."
+                return "You are a helpful assistant. Extract the key points from the following web page content. Format as a markdown bulleted list with **bold** for the most important terms."
             case .simplify:
-                return "You are a helpful assistant. Rewrite the key content from this web page using simpler language and shorter sentences. Make it accessible to a general audience."
+                return "You are a helpful assistant. Rewrite the key content from this web page using simpler language and shorter sentences. Use markdown formatting. Make it accessible to a general audience."
             case .translate:
-                return "You are a helpful assistant. Translate the key content of this web page to English. Maintain the original structure and meaning."
+                return "You are a helpful assistant. Translate the key content of this web page to English. Use markdown formatting. Maintain the original structure and meaning."
             }
         }
 
@@ -84,7 +84,7 @@ struct AIAssistView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header — glass
+            // Header
             HStack {
                 Text("AI Assist")
                     .font(AetherTheme.Typography.heading)
@@ -92,7 +92,6 @@ struct AIAssistView: View {
 
                 Spacer()
 
-                // Mode picker
                 Picker("", selection: $state.mode) {
                     ForEach(AIAssistState.Mode.allCases, id: \.self) { mode in
                         Text(mode.rawValue).tag(mode)
@@ -184,6 +183,8 @@ struct AIAssistView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: - Result View with Markdown
+
     private var resultView: some View {
         VStack(spacing: 0) {
             if let action = state.currentAction {
@@ -211,11 +212,7 @@ struct AIAssistView: View {
             }
 
             ScrollView {
-                Text(state.result)
-                    .font(AetherTheme.Typography.body)
-                    .foregroundColor(AetherTheme.Colors.textPrimary)
-                    .textSelection(.enabled)
-                    .lineSpacing(4)
+                MarkdownTextView(text: state.result)
                     .padding(AetherTheme.Spacing.xl)
             }
 
@@ -289,19 +286,29 @@ struct AIAssistView: View {
                 }
                 .frame(maxWidth: .infinity)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: AetherTheme.Spacing.md) {
-                        ForEach(state.chatMessages) { msg in
-                            chatBubble(msg)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: AetherTheme.Spacing.md) {
+                            ForEach(state.chatMessages) { msg in
+                                chatBubble(msg)
+                                    .id(msg.id)
+                            }
+                        }
+                        .padding(AetherTheme.Spacing.xl)
+                    }
+                    .onChange(of: state.chatMessages.count) { _, _ in
+                        if let last = state.chatMessages.last {
+                            withAnimation {
+                                proxy.scrollTo(last.id, anchor: .bottom)
+                            }
                         }
                     }
-                    .padding(AetherTheme.Spacing.xl)
                 }
             }
 
             Divider().background(AetherTheme.Colors.glassBorderSubtle)
 
-            // Chat input — glass
+            // Chat input
             HStack(spacing: AetherTheme.Spacing.md) {
                 TextField("Ask about this page...", text: $state.chatInput)
                     .textFieldStyle(.plain)
@@ -329,23 +336,29 @@ struct AIAssistView: View {
         HStack {
             if message.role == "user" { Spacer() }
 
-            Text(message.content)
-                .font(AetherTheme.Typography.body)
-                .foregroundColor(AetherTheme.Colors.textPrimary)
-                .padding(AetherTheme.Spacing.lg)
-                .background(
-                    RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
-                        .fill(
-                            message.role == "user"
-                                ? AetherTheme.Colors.accentSubtle
-                                : AetherTheme.Colors.glassSurface
-                        )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
-                        .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
-                )
-                .textSelection(.enabled)
+            VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: 0) {
+                if message.role == "user" {
+                    Text(message.content)
+                        .font(AetherTheme.Typography.body)
+                        .foregroundColor(AetherTheme.Colors.textPrimary)
+                        .textSelection(.enabled)
+                } else {
+                    MarkdownTextView(text: message.content)
+                }
+            }
+            .padding(AetherTheme.Spacing.lg)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                    .fill(
+                        message.role == "user"
+                            ? AetherTheme.Colors.accentSubtle
+                            : AetherTheme.Colors.glassSurface
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.xl, style: .continuous)
+                    .strokeBorder(AetherTheme.Colors.glassBorderSubtle, lineWidth: 0.5)
+            )
 
             if message.role != "user" { Spacer() }
         }
@@ -374,7 +387,7 @@ struct AIAssistView: View {
             let pageTitle = coordinator.pageTitle
 
             let systemPrompt = """
-            You are a helpful assistant analyzing a web page. Answer questions about the page content.
+            You are a helpful assistant analyzing a web page. Answer questions about the page content. Use markdown formatting (headers, bold, bullets, code blocks) for clarity.
             Page Title: \(pageTitle)
             Page URL: \(pageURL)
             Page Content (truncated): \(truncated)
@@ -455,6 +468,25 @@ struct AIAssistView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Markdown Text View
+
+struct MarkdownTextView: View {
+    let text: String
+
+    var body: some View {
+        Text(markdownAttributed)
+            .font(AetherTheme.Typography.body)
+            .foregroundColor(AetherTheme.Colors.textPrimary)
+            .textSelection(.enabled)
+            .lineSpacing(3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var markdownAttributed: AttributedString {
+        (try? AttributedString(markdown: text, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(text)
     }
 }
 

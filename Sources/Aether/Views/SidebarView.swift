@@ -12,6 +12,7 @@ struct SidebarView: View {
     @State private var selectedSection: SidebarSection = .workspaces
     @State private var workspaceName: String = ""
     @State private var showRenameSheet: Bool = false
+    @State private var searchText: String = ""
     let onNavigate: (String) -> Void
 
     enum SidebarSection: String, CaseIterable {
@@ -22,41 +23,54 @@ struct SidebarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Section picker — glass pills
-            HStack(spacing: 2) {
+            // Section picker — refined pills
+            HStack(spacing: 1) {
                 ForEach(SidebarSection.allCases, id: \.self) { section in
-                    Button {
+                    SidebarSectionButton(
+                        section: section,
+                        icon: iconForSection(section),
+                        isSelected: selectedSection == section
+                    ) {
                         withAnimation(AetherTheme.Animation.spring) {
                             selectedSection = section
+                            searchText = ""
                         }
-                    } label: {
-                        VStack(spacing: 2) {
-                            Image(systemName: iconForSection(section))
-                                .font(.system(size: 11))
-                            Text(section.rawValue)
-                                .font(.system(size: 9, weight: .medium))
-                        }
-                        .foregroundColor(
-                            selectedSection == section
-                                ? AetherTheme.Colors.accent
-                                : AetherTheme.Colors.textTertiary
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, AetherTheme.Spacing.md)
-                        .background(
-                            RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
-                                .fill(
-                                    selectedSection == section
-                                        ? AetherTheme.Colors.accentSubtle
-                                        : Color.clear
-                                )
-                        )
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, AetherTheme.Spacing.md)
             .padding(.vertical, AetherTheme.Spacing.md)
+
+            // Search field for bookmarks/history
+            if selectedSection != .workspaces {
+                HStack(spacing: AetherTheme.Spacing.md) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 10))
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+
+                    TextField("Filter \(selectedSection.rawValue.lowercased())...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 11))
+                        .foregroundColor(AetherTheme.Colors.textPrimary)
+
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(AetherTheme.Colors.textTertiary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, AetherTheme.Spacing.lg)
+                .padding(.vertical, AetherTheme.Spacing.sm + 1)
+                .background(
+                    RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                        .fill(AetherTheme.Colors.surfaceElevated.opacity(0.5))
+                )
+                .padding(.horizontal, AetherTheme.Spacing.md)
+                .padding(.bottom, AetherTheme.Spacing.sm)
+            }
 
             Divider()
                 .background(AetherTheme.Colors.glassBorderSubtle)
@@ -92,12 +106,17 @@ struct SidebarView: View {
 
     private var workspacesSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Current workspace — glass card
+            // Current workspace card
             HStack(spacing: AetherTheme.Spacing.md) {
-                Image(systemName: "square.grid.2x2.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(AetherTheme.Colors.accent)
-                    .frame(width: 18)
+                ZStack {
+                    RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                        .fill(AetherTheme.Colors.accentSubtle)
+                        .frame(width: 28, height: 28)
+
+                    Image(systemName: "square.grid.2x2.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(AetherTheme.Colors.accent)
+                }
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(workspaceManager.currentWorkspace.name)
@@ -105,21 +124,21 @@ struct SidebarView: View {
                         .foregroundColor(AetherTheme.Colors.textPrimary)
                         .lineLimit(1)
                     Text("Active workspace")
-                        .font(.system(size: 10))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(AetherTheme.Colors.accent)
                 }
 
                 Spacer()
             }
             .padding(.horizontal, AetherTheme.Spacing.xl)
-            .padding(.vertical, AetherTheme.Spacing.md)
+            .padding(.vertical, AetherTheme.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
-                    .fill(AetherTheme.Colors.accentSubtle)
+                    .fill(AetherTheme.Colors.accentSubtle.opacity(0.6))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AetherTheme.Radius.lg, style: .continuous)
-                    .strokeBorder(AetherTheme.Colors.accent.opacity(0.15), lineWidth: 0.5)
+                    .strokeBorder(AetherTheme.Colors.accent.opacity(0.12), lineWidth: 0.5)
             )
             .padding(.horizontal, AetherTheme.Spacing.md)
             .padding(.bottom, AetherTheme.Spacing.sm)
@@ -165,14 +184,21 @@ struct SidebarView: View {
 
     private var bookmarksSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if bookmarkManager.bookmarks.isEmpty {
+            let filteredBookmarks = searchText.isEmpty
+                ? bookmarkManager.bookmarks
+                : bookmarkManager.bookmarks.filter {
+                    $0.title.localizedCaseInsensitiveContains(searchText) ||
+                    $0.url.localizedCaseInsensitiveContains(searchText)
+                }
+
+            if filteredBookmarks.isEmpty {
                 emptyStateView(
-                    icon: "bookmark",
-                    title: "No bookmarks yet",
-                    subtitle: "Press Cmd+D to bookmark a page"
+                    icon: searchText.isEmpty ? "bookmark" : "magnifyingglass",
+                    title: searchText.isEmpty ? "No bookmarks yet" : "No matches",
+                    subtitle: searchText.isEmpty ? "Press Cmd+D to bookmark a page" : "Try a different search term"
                 )
             } else {
-                if !bookmarkManager.folders.isEmpty {
+                if !bookmarkManager.folders.isEmpty && searchText.isEmpty {
                     ForEach(bookmarkManager.folders) { folder in
                         DisclosureGroup {
                             let folderBookmarks = bookmarkManager.bookmarks.filter { $0.folderId == folder.id }
@@ -181,8 +207,8 @@ struct SidebarView: View {
                             }
                         } label: {
                             HStack(spacing: AetherTheme.Spacing.md) {
-                                Image(systemName: "folder")
-                                    .font(.system(size: 12))
+                                Image(systemName: "folder.fill")
+                                    .font(.system(size: 11))
                                     .foregroundColor(AetherTheme.Colors.textTertiary)
                                     .frame(width: 18)
                                 Text(folder.name)
@@ -200,9 +226,11 @@ struct SidebarView: View {
                     }
                 }
 
-                let displayBookmarks = bookmarkManager.folders.isEmpty
-                    ? bookmarkManager.bookmarks
-                    : bookmarkManager.bookmarks.filter { $0.folderId == nil }
+                let displayBookmarks = searchText.isEmpty
+                    ? (bookmarkManager.folders.isEmpty
+                        ? bookmarkManager.bookmarks
+                        : bookmarkManager.bookmarks.filter { $0.folderId == nil })
+                    : filteredBookmarks
 
                 ForEach(displayBookmarks) { bookmark in
                     bookmarkRow(bookmark)
@@ -232,14 +260,21 @@ struct SidebarView: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if historyManager.recentHistory.isEmpty {
+            let filteredHistory = searchText.isEmpty
+                ? historyManager.recentHistory
+                : historyManager.recentHistory.filter {
+                    ($0.title ?? "").localizedCaseInsensitiveContains(searchText) ||
+                    $0.url.localizedCaseInsensitiveContains(searchText)
+                }
+
+            if filteredHistory.isEmpty {
                 emptyStateView(
-                    icon: "clock",
-                    title: "No history yet",
-                    subtitle: "Pages you visit will appear here"
+                    icon: searchText.isEmpty ? "clock" : "magnifyingglass",
+                    title: searchText.isEmpty ? "No history yet" : "No matches",
+                    subtitle: searchText.isEmpty ? "Pages you visit will appear here" : "Try a different search term"
                 )
             } else {
-                let grouped = groupHistoryByDate(historyManager.recentHistory)
+                let grouped = groupHistoryByDate(filteredHistory)
 
                 ForEach(grouped.keys.sorted(), id: \.self) { dateKey in
                     sidebarSectionHeader(dateKey)
@@ -301,14 +336,14 @@ struct SidebarView: View {
     private func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: AetherTheme.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 24))
-                .foregroundColor(AetherTheme.Colors.textTertiary.opacity(0.6))
+                .font(.system(size: 22, weight: .light))
+                .foregroundColor(AetherTheme.Colors.textTertiary.opacity(0.5))
             Text(title)
                 .font(AetherTheme.Typography.caption)
                 .foregroundColor(AetherTheme.Colors.textTertiary)
             Text(subtitle)
                 .font(.system(size: 10))
-                .foregroundColor(AetherTheme.Colors.textTertiary)
+                .foregroundColor(AetherTheme.Colors.textTertiary.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
         .padding(AetherTheme.Spacing.xxl)
@@ -339,8 +374,9 @@ struct SidebarView: View {
 
     private func sidebarSectionHeader(_ title: String) -> some View {
         Text(title.uppercased())
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: 9, weight: .bold, design: .rounded))
             .foregroundColor(AetherTheme.Colors.textTertiary)
+            .tracking(0.5)
             .padding(.horizontal, AetherTheme.Spacing.xl)
             .padding(.top, AetherTheme.Spacing.lg)
             .padding(.bottom, AetherTheme.Spacing.sm)
@@ -353,6 +389,47 @@ struct SidebarView: View {
         action: (() -> Void)? = nil
     ) -> some View {
         SidebarRowView(icon: icon, title: title, subtitle: subtitle, action: action)
+    }
+}
+
+// MARK: - Section Button
+
+private struct SidebarSectionButton: View {
+    let section: SidebarView.SidebarSection
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 2) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                Text(section.rawValue)
+                    .font(.system(size: 9, weight: .medium))
+            }
+            .foregroundColor(
+                isSelected
+                    ? AetherTheme.Colors.accent
+                    : (isHovering ? AetherTheme.Colors.textSecondary : AetherTheme.Colors.textTertiary)
+            )
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AetherTheme.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
+                    .fill(
+                        isSelected
+                            ? AetherTheme.Colors.accentSubtle
+                            : (isHovering ? AetherTheme.Colors.glassHover : .clear)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(AetherTheme.Animation.fast) { isHovering = hovering }
+        }
     }
 }
 
@@ -372,21 +449,21 @@ private struct SidebarRowView: View {
         } label: {
             HStack(spacing: AetherTheme.Spacing.md) {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(
                         isHovering ? AetherTheme.Colors.accent : AetherTheme.Colors.textTertiary
                     )
-                    .frame(width: 18)
+                    .frame(width: 16)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title)
-                        .font(AetherTheme.Typography.caption)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(AetherTheme.Colors.textPrimary)
                         .lineLimit(1)
 
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(size: 10))
+                            .font(.system(size: 9))
                             .foregroundColor(AetherTheme.Colors.textTertiary)
                             .lineLimit(1)
                     }

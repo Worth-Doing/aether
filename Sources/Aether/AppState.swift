@@ -9,6 +9,7 @@ import AIService
 import SemanticEngine
 import SecureStorage
 import Persistence
+import WebSearchService
 
 @Observable
 final class AppState {
@@ -26,6 +27,7 @@ final class AppState {
     let historyManager: HistoryManager
     let bookmarkManager: BookmarkManager
     let commandBarState: CommandBarState
+    let searchManager: SearchManager
 
     let semanticIndex: SemanticIndex?
 
@@ -56,6 +58,9 @@ final class AppState {
         // AI service
         let openRouter = OpenRouterClient(keychain: keychain)
         self.openRouterClient = openRouter
+
+        // Search manager
+        self.searchManager = SearchManager(keychain: keychain)
 
         // Tab & workspace
         let tabStore = TabStore()

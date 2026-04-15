@@ -2,10 +2,18 @@ import SwiftUI
 import AetherCore
 import AetherUI
 import TabManager
+import WebSearchService
+import HistoryEngine
+import BookmarkEngine
 
 struct PanelLayoutView: View {
     @Bindable var tabStore: TabStore
     let layout: PanelNode
+    var searchManager: SearchManager?
+    var historyManager: HistoryManager?
+    var bookmarkManager: BookmarkManager?
+    var onShowSettings: (() -> Void)?
+    var onShowWebSearch: (() -> Void)?
 
     var body: some View {
         renderNode(layout)
@@ -15,7 +23,15 @@ struct PanelLayoutView: View {
         switch node {
         case .leaf(let panelId):
             return AnyView(
-                PanelView(tabStore: tabStore, panelId: panelId)
+                PanelView(
+                    tabStore: tabStore,
+                    panelId: panelId,
+                    searchManager: searchManager,
+                    historyManager: historyManager,
+                    bookmarkManager: bookmarkManager,
+                    onShowSettings: onShowSettings,
+                    onShowWebSearch: onShowWebSearch
+                )
             )
 
         case .split(let axis, _, let first, let second):

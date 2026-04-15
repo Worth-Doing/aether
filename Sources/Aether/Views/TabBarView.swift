@@ -14,7 +14,7 @@ struct TabBarView: View {
     var body: some View {
         HStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 2) {
+                HStack(spacing: 1) {
                     if let panel {
                         let pinned = panel.tabs.filter { $0.isPinned }
                         let unpinned = panel.tabs.filter { !$0.isPinned }
@@ -34,8 +34,9 @@ struct TabBarView: View {
 
                         if !pinned.isEmpty && !unpinned.isEmpty {
                             Divider()
-                                .frame(height: 20)
-                                .padding(.horizontal, 2)
+                                .frame(height: 18)
+                                .padding(.horizontal, 3)
+                                .opacity(0.5)
                         }
 
                         ForEach(unpinned) { tab in
@@ -55,17 +56,19 @@ struct TabBarView: View {
                     }
                 }
                 .padding(.leading, AetherTheme.Spacing.sm)
+                .padding(.vertical, AetherTheme.Spacing.xs)
             }
 
             Spacer()
 
+            // New tab button
             Button {
                 _ = tabStore.createTab(in: panelId)
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 24, height: 24)
                     .background(
                         RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
                             .fill(AetherTheme.Colors.glassSurface.opacity(0.01))
@@ -75,7 +78,12 @@ struct TabBarView: View {
             .padding(.trailing, AetherTheme.Spacing.md)
         }
         .frame(height: AetherTheme.Sizes.tabBarHeight)
-        .background(AetherTheme.Colors.background.opacity(0.6))
+        .background(
+            ZStack {
+                AetherTheme.Colors.background.opacity(0.5)
+                AetherTheme.Colors.surfaceElevated.opacity(0.15)
+            }
+        )
     }
 
     @ViewBuilder
@@ -141,19 +149,20 @@ struct PinnedTabView: View {
             Group {
                 if tab.isLoading {
                     ProgressView()
-                        .scaleEffect(0.4)
+                        .scaleEffect(0.35)
                         .frame(width: 14, height: 14)
                 } else if let favicon = tab.favicon {
                     Image(nsImage: favicon)
                         .resizable()
+                        .interpolation(.high)
                         .frame(width: 14, height: 14)
                 } else {
                     Image(systemName: "globe")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(AetherTheme.Colors.textTertiary)
                 }
             }
-            .frame(width: 34, height: 28)
+            .frame(width: 32, height: 26)
             .background(
                 RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
                     .fill(
@@ -169,6 +178,7 @@ struct PinnedTabView: View {
                         lineWidth: 0.5
                     )
             )
+            .shadow(color: isActive ? AetherTheme.Colors.shadowSubtle : .clear, radius: 3, x: 0, y: 1)
         }
         .buttonStyle(.plain)
         .help(tab.displayTitle)
@@ -190,26 +200,32 @@ struct TabItemView: View {
     let onClose: () -> Void
 
     @State private var isHovering = false
+    @State private var isCloseHovering = false
 
     var body: some View {
         HStack(spacing: AetherTheme.Spacing.sm) {
-            if tab.isLoading {
-                ProgressView()
-                    .scaleEffect(0.4)
-                    .frame(width: 14, height: 14)
-            } else if let favicon = tab.favicon {
-                Image(nsImage: favicon)
-                    .resizable()
-                    .frame(width: 14, height: 14)
-            } else {
-                Image(systemName: "globe")
-                    .font(.system(size: 10))
-                    .foregroundColor(AetherTheme.Colors.textTertiary)
-                    .frame(width: 14, height: 14)
+            // Favicon / loading
+            Group {
+                if tab.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.35)
+                        .frame(width: 13, height: 13)
+                } else if let favicon = tab.favicon {
+                    Image(nsImage: favicon)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 13, height: 13)
+                } else {
+                    Image(systemName: "globe")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                        .frame(width: 13, height: 13)
+                }
             }
 
+            // Title
             Text(tab.displayTitle)
-                .font(AetherTheme.Typography.tabTitle)
+                .font(.system(size: 11.5, weight: isActive ? .semibold : .medium))
                 .foregroundColor(
                     isActive && isFocusedPanel
                         ? AetherTheme.Colors.textPrimary
@@ -217,23 +233,28 @@ struct TabItemView: View {
                 )
                 .lineLimit(1)
 
+            // Close button
             if isHovering || isActive {
                 Button(action: onClose) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(AetherTheme.Colors.textTertiary)
-                        .frame(width: 16, height: 16)
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundColor(isCloseHovering ? AetherTheme.Colors.textPrimary : AetherTheme.Colors.textTertiary)
+                        .frame(width: 14, height: 14)
                         .background(
-                            RoundedRectangle(cornerRadius: AetherTheme.Radius.sm, style: .continuous)
-                                .fill(isHovering ? AetherTheme.Colors.glassHover : .clear)
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(isCloseHovering ? AetherTheme.Colors.error.opacity(0.15) : .clear)
                         )
                 }
                 .buttonStyle(.plain)
+                .onHover { hovering in
+                    withAnimation(AetherTheme.Animation.fast) { isCloseHovering = hovering }
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
             }
         }
         .padding(.horizontal, AetherTheme.Spacing.lg)
         .padding(.vertical, AetherTheme.Spacing.sm)
-        .frame(maxWidth: 200)
+        .frame(maxWidth: 180)
         .background(
             RoundedRectangle(cornerRadius: AetherTheme.Radius.md, style: .continuous)
                 .fill(
@@ -249,6 +270,7 @@ struct TabItemView: View {
                     lineWidth: 0.5
                 )
         )
+        .shadow(color: isActive ? AetherTheme.Colors.shadowSubtle : .clear, radius: 3, x: 0, y: 1)
         .onHover { hovering in
             withAnimation(AetherTheme.Animation.fast) {
                 isHovering = hovering
@@ -257,5 +279,6 @@ struct TabItemView: View {
         .onTapGesture {
             onSelect()
         }
+        .animation(AetherTheme.Animation.fast, value: isHovering)
     }
 }

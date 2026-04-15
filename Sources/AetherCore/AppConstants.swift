@@ -3,7 +3,7 @@ import Foundation
 public enum AppConstants {
     public static let appName = "Aether"
     public static let bundleIdentifier = "com.aether.browser"
-    public static let version = "0.3.0"
+    public static let version = "1.0.0"
 
     public enum Defaults {
         public static let llmModel = "anthropic/claude-sonnet-4"
@@ -17,6 +17,10 @@ public enum AppConstants {
     public enum Keychain {
         public static let serviceName = "com.aether.browser"
         public static let apiKeyAccount = "openrouter-api-key"
+        public static let serperApiKey = "serper-api-key"
+        public static let firecrawlApiKey = "firecrawl-api-key"
+        public static let exaApiKey = "exa-api-key"
+        public static let tavilyApiKey = "tavily-api-key"
     }
 
     public enum Database {
@@ -47,5 +51,11 @@ public enum AppConstants {
         public static let homePage = "homePage"
         public static let restoreSession = "restoreSession"
         public static let showStatusBar = "showStatusBar"
+        public static let serperEnabled = "serperEnabled"
+        public static let firecrawlEnabled = "firecrawlEnabled"
+        public static let exaEnabled = "exaEnabled"
+        public static let tavilyEnabled = "tavilyEnabled"
+        public static let defaultSearchProvider = "defaultSearchProvider"
+        public static let searchMode = "searchMode"
     }
 }

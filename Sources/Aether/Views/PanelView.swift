@@ -3,10 +3,18 @@ import AetherCore
 import AetherUI
 import TabManager
 import BrowserEngine
+import WebSearchService
+import HistoryEngine
+import BookmarkEngine
 
 struct PanelView: View {
     @Bindable var tabStore: TabStore
     let panelId: UUID
+    var searchManager: SearchManager?
+    var historyManager: HistoryManager?
+    var bookmarkManager: BookmarkManager?
+    var onShowSettings: (() -> Void)?
+    var onShowWebSearch: (() -> Void)?
 
     var panel: Panel? {
         tabStore.panels.first { $0.id == panelId }
@@ -21,8 +29,20 @@ struct PanelView: View {
 
             if let tab = panel?.activeTab,
                let coordinator = tabStore.coordinator(for: tab.id) {
-                WebViewRepresentable(coordinator: coordinator)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if tab.url != nil {
+                    WebViewRepresentable(coordinator: coordinator)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // New tab page
+                    NewTabPageView(
+                        searchManager: searchManager,
+                        historyManager: historyManager,
+                        bookmarkManager: bookmarkManager,
+                        onNavigate: { url in tabStore.navigate(to: url) },
+                        onWebSearch: { onShowWebSearch?() },
+                        onSettings: { onShowSettings?() }
+                    )
+                }
             } else {
                 emptyState
             }
@@ -46,7 +66,6 @@ struct PanelView: View {
         VStack(spacing: AetherTheme.Spacing.xxl) {
             Spacer()
 
-            // Glowing icon
             ZStack {
                 Circle()
                     .fill(AetherTheme.Colors.accentGlow)
@@ -66,7 +85,6 @@ struct PanelView: View {
                 .font(AetherTheme.Typography.body)
                 .foregroundColor(AetherTheme.Colors.textTertiary)
 
-            // Quick shortcuts — glass cards
             VStack(spacing: AetherTheme.Spacing.md) {
                 shortcutRow("New Tab", key: "T")
                 shortcutRow("Command Palette", key: "K")

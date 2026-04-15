@@ -5,6 +5,7 @@ import AIService
 import SecureStorage
 import HistoryEngine
 import BookmarkEngine
+import WebSearchService
 
 public struct SettingsView: View {
     @State private var apiKey: String = ""
@@ -25,15 +26,21 @@ public struct SettingsView: View {
     @State private var showClearBookmarksConfirm = false
 
     let openRouterClient: OpenRouterClient
+    let searchManager: SearchManager?
+    let keychain: KeychainManager?
     var historyManager: HistoryManager?
     var bookmarkManager: BookmarkManager?
 
     public init(
         openRouterClient: OpenRouterClient,
+        searchManager: SearchManager? = nil,
+        keychain: KeychainManager? = nil,
         historyManager: HistoryManager? = nil,
         bookmarkManager: BookmarkManager? = nil
     ) {
         self.openRouterClient = openRouterClient
+        self.searchManager = searchManager
+        self.keychain = keychain
         self.historyManager = historyManager
         self.bookmarkManager = bookmarkManager
     }
@@ -42,6 +49,7 @@ public struct SettingsView: View {
         case general = "General"
         case appearance = "Appearance"
         case ai = "AI"
+        case integrations = "Integrations"
         case privacy = "Privacy & Data"
         case about = "About"
 
@@ -50,6 +58,7 @@ public struct SettingsView: View {
             case .general: return "gear"
             case .appearance: return "paintbrush"
             case .ai: return "sparkles"
+            case .integrations: return "puzzlepiece.extension"
             case .privacy: return "hand.raised"
             case .about: return "info.circle"
             }
@@ -76,6 +85,12 @@ public struct SettingsView: View {
                 }
                 .tag(SettingsTab.ai)
 
+            integrationsTab
+                .tabItem {
+                    Label(SettingsTab.integrations.rawValue, systemImage: SettingsTab.integrations.icon)
+                }
+                .tag(SettingsTab.integrations)
+
             privacyTab
                 .tabItem {
                     Label(SettingsTab.privacy.rawValue, systemImage: SettingsTab.privacy.icon)
@@ -88,7 +103,7 @@ public struct SettingsView: View {
                 }
                 .tag(SettingsTab.about)
         }
-        .frame(width: 520, height: 420)
+        .frame(width: 620, height: 560)
         .onAppear {
             hasKey = openRouterClient.isConfigured
         }
@@ -263,6 +278,26 @@ public struct SettingsView: View {
         }
         .formStyle(.grouped)
         .padding(.top, AetherTheme.Spacing.md)
+    }
+
+    // MARK: - Integrations
+
+    private var integrationsTab: some View {
+        Group {
+            if let searchManager, let keychain {
+                IntegrationsSettingsView(searchManager: searchManager, keychain: keychain)
+            } else {
+                VStack(spacing: AetherTheme.Spacing.lg) {
+                    Image(systemName: "puzzlepiece.extension")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundColor(AetherTheme.Colors.textTertiary)
+                    Text("Search integrations are not available yet.")
+                        .font(AetherTheme.Typography.caption)
+                        .foregroundColor(AetherTheme.Colors.textSecondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
     }
 
     // MARK: - About

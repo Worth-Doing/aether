@@ -30,6 +30,7 @@ let package = Package(
                 "Settings",
                 "SecureStorage",
                 "Persistence",
+                "WebSearchService",
             ]
         ),
 
@@ -101,6 +102,12 @@ let package = Package(
             dependencies: ["AetherCore", "AIService", "Persistence"]
         ),
 
+        // MARK: - Web Search Service (Firecrawl, Exa, Tavily)
+        .target(
+            name: "WebSearchService",
+            dependencies: ["AetherCore", "SecureStorage"]
+        ),
+
         // MARK: - Onboarding
         .target(
             name: "Onboarding",
@@ -117,6 +124,7 @@ let package = Package(
                 "SecureStorage",
                 "HistoryEngine",
                 "BookmarkEngine",
+                "WebSearchService",
             ]
         ),
 

@@ -228,6 +228,35 @@ public enum AetherTheme {
             red: 1.0, green: 0.84, blue: 0.0, alpha: 0.4
         ))
 
+        // Provider colors
+        public static let firecrawlColor = Color.orange
+        public static let exaColor = Color.purple
+        public static let tavilyColor = adaptive(
+            light: NSColor(red: 0.20, green: 0.48, blue: 1.0, alpha: 1.0),
+            dark: NSColor(red: 0.38, green: 0.60, blue: 1.0, alpha: 1.0)
+        )
+
+        // Gradient surfaces
+        public static let toolbarGradientStart = adaptive(
+            light: NSColor(white: 0.99, alpha: 0.95),
+            dark: NSColor(white: 0.09, alpha: 0.92)
+        )
+
+        public static let toolbarGradientEnd = adaptive(
+            light: NSColor(white: 0.96, alpha: 0.88),
+            dark: NSColor(white: 0.07, alpha: 0.85)
+        )
+
+        public static let newTabGradient1 = adaptive(
+            light: NSColor(red: 0.95, green: 0.96, blue: 0.99, alpha: 1.0),
+            dark: NSColor(red: 0.06, green: 0.06, blue: 0.10, alpha: 1.0)
+        )
+
+        public static let newTabGradient2 = adaptive(
+            light: NSColor(red: 0.97, green: 0.97, blue: 0.98, alpha: 1.0),
+            dark: NSColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1.0)
+        )
+
         // Helper
         private static func adaptive(light: NSColor, dark: NSColor) -> Color {
             Color(nsColor: NSColor(name: nil, dynamicProvider: { appearance in

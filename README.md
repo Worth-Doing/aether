@@ -5,11 +5,11 @@
 <h1 align="center">Aether</h1>
 
 <p align="center">
-  <strong>A native cognitive browser for macOS</strong>
+  <strong>A next-generation cognitive browser for macOS</strong>
 </p>
 
 <p align="center">
-  Browse, organize, and remember. Aether helps you think better on the web.
+  Browse, search, organize, and understand the web — powered by AI.
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-14%2B-blue" alt="macOS 14+" />
   <img src="https://img.shields.io/badge/Swift-5.9-orange" alt="Swift 5.9" />
-  <img src="https://img.shields.io/badge/version-0.3.0-green" alt="v0.3.0" />
+  <img src="https://img.shields.io/badge/version-1.0.0-green" alt="v1.0.0" />
   <img src="https://img.shields.io/badge/notarized-Apple-black" alt="Notarized" />
 </p>
 
@@ -29,13 +29,14 @@
 
 ## What is Aether?
 
-Aether is a next-generation native macOS browser built with **Swift + SwiftUI**. It combines a premium browsing experience with workspace management, semantic memory, and optional AI-powered intelligence via **OpenRouter**.
+Aether is a native macOS browser built with **Swift + SwiftUI** that combines premium browsing with AI-powered web intelligence, multi-panel workspaces, and deep search integrations.
 
-Three layers working together:
+Four layers working together:
 
-1. **Browser** — Real, high-quality web browsing via WKWebView
+1. **Browser** — Fast, native web browsing via WKWebView
 2. **Workspace** — Multi-panel tabs, sessions, saved layouts
-3. **Intelligence** — Semantic retrieval, page understanding, AI assist (optional)
+3. **Intelligence** — AI page analysis, semantic memory, reading mode
+4. **Search** — Firecrawl, Exa, Tavily, and Serper integrations for web/images/videos/news
 
 ## Download
 
@@ -45,90 +46,112 @@ Three layers working together:
 
 > Signed and notarized with Apple Developer ID. No Gatekeeper warnings.
 
-## What's New in v0.3.0
+---
 
-### Glass UI Redesign (iOS 26 Aesthetic)
-- **Glassmorphism throughout** — Frosted blur, translucent panels, depth hierarchy
-- **NSVisualEffectView integration** — Real macOS vibrancy materials on toolbar, sidebar, command bar, AI panel
-- **Glass design tokens** — 15 new adaptive glass colors (`glassBackground`, `glassSurface`, `glassCard`, `glassBorder`, etc.)
-- **Gradient borders** — Top-to-bottom gradient stroke on floating elements
-- **Glow effects** — Accent-colored blur circles behind icons on empty states
-- **Press animations** — Scale-down spring animation on all interactive glass components
-- **Spring-dominant motion** — Replaced ease-in-out with physics-based spring curves
+## What's New in v1.0.0
 
-### New Components
-- **GlassIconButton** — Icon button with glass hover state, press scale, and accessibility label
-- **GlassCard** — Hover-responsive frosted card with gradient border
-- **GlassCommandCard** — Floating command bar with deep shadow and blur
-- **VisualEffectBlur** — NSVisualEffectView wrapper for SwiftUI
-- **View modifiers** — `.glassBackground()`, `.glassCard()`, `.glassPanel()`, `.glassToolbar()`
+### AI-Powered Search with 4 Providers
+Connect your own API keys for powerful web intelligence:
 
-### Toast Notification System
-- **ToastManager** — Observable toast system with auto-dismiss (2.5s)
-- **Glass toast capsule** — Frosted pill with icon, message, and color-coded glow
-- **Bookmark feedback** — "Bookmark added" / "Bookmark removed" toasts
+| Provider | Capabilities |
+|----------|-------------|
+| **Serper** | Google Search API — Web, Images, Videos, News with dedicated endpoints |
+| **Firecrawl** | Web scraping & content extraction, returns LLM-ready markdown |
+| **Exa** | Neural search with highlights, summaries, and deep search modes |
+| **Tavily** | Research-grade search with AI-generated answers |
 
-### Security Fixes
-- **Fixed 3 SQL injection vulnerabilities** — DELETE operations now use parameterized queries
-- **KVO memory leak fix** — WebViewCoordinator now invalidates all 6 observations in `deinit`
-- **Proper error handling** — Replaced 19 silent `try?` catches with `lastError` state propagation
+- **7 search modes**: Web, Images, Videos, News, Research, Fast, Deep
+- **Rich media results**: Image grid with thumbnails, video cards with duration/channel, news cards with source/date
+- **Knowledge Graph**: Google knowledge panels displayed inline
+- **AI Answers**: LLM-generated answers from Tavily and Exa
+- **Split-view preview**: Select a result to see full content in a side panel
+- **Search caching**: 5-minute TTL cache prevents redundant API calls
+- **Auto provider routing**: Images/Videos/News modes auto-select Serper when available
 
-### Feature Upgrades
-- **Workspace persistence** — Workspaces now saved to SQLite (schema was unused before)
-- **Session save on quit** — App saves workspace state on exit
-- **WorkspaceRepository** — Full CRUD for workspace persistence
+### Reading Mode
+- Distraction-free reader with **serif typography**
+- Adjustable **font size** (13–24pt), **column width** (500–900px), **line spacing**
+- Floating glass control panel
+- One-click activation from status bar
 
-### Performance
-- **Accelerate-optimized vector search** — Cosine similarity uses `vDSP_dotpr` instead of manual loops
-- **Optimized URLSession** — Connection pooling with `httpMaximumConnectionsPerHost`
+### AI Assist with Markdown Rendering
+- **6 page actions**: Summarize, Explain, Key Points, Extract Actions, Simplify, Translate
+- **Chat mode**: Multi-turn conversation about the current page with auto-scroll
+- **Markdown output**: Bold, italic, bullets, code blocks rendered natively
+- System prompts instruct the LLM to format responses with markdown
 
-### Previous (v0.2.0)
-- Light mode default, find in page, zoom controls, tab pinning, AI chat mode, 11 command palette commands, configurable search engine, tabbed settings, semantic auto-indexing
+### Quick Notes & Page Intelligence
+- **Notes tab**: Scratchpad with character count and copy-to-clipboard
+- **Summary tab**: One-click AI page summarization
+- **Key Points tab**: Numbered key point extraction
+
+### Download Manager
+- Progress tracking with animated bar
+- File type icons (PDF, ZIP, DMG, images, video, audio, code)
+- Active/Completed sections
+- Open in Finder, remove, clear completed
+- Active download indicator dot on status bar
+
+### Enhanced New Tab Page
+- Live clock display
+- Search bar with glass morphism
+- **Recent sites grid**: Top 8 unique domains from history
+- **Bookmarks grid**: Quick access to saved bookmarks
+- Quick action cards: AI Search, Settings
+
+### Premium Integrations Settings
+- Beautiful provider cards with expand/collapse
+- Status badges (Connected / Not configured)
+- Secure API key input with validation
+- Set default provider
+- Provider descriptions and capabilities
+
+### Visual Overhaul
+- **Toolbar**: Navigation button cluster, gradient background, premium address bar
+- **Tab bar**: Refined close button with red hover state, active tab shadow
+- **Sidebar**: Inline search/filter for bookmarks and history
+- **Status bar**: Reading Mode, Quick Notes, Downloads buttons with tooltips
+
+### Previous Versions
+- **v0.3.0**: Glass UI redesign, security fixes, workspace persistence
+- **v0.2.0**: Light theme, find in page, zoom, tab pinning, AI chat, command palette
+
+---
 
 ## Features
 
 ### Multi-Panel Browsing
-Split your browser into multiple panels — side by side, top and bottom, or in complex grid layouts. Perfect for research, comparison, and deep work.
+Split your browser into multiple panels — side by side, top and bottom, or complex layouts. Draggable dividers between panels.
 
 ### Workspaces
-Save and restore browsing sessions by project or topic. Each workspace preserves your tabs, panel layout, and context.
+Save and restore browsing sessions by project. Each workspace preserves tabs, panel layout, and context.
 
 ### Command Palette
-Press `Cmd+K` to open a unified command bar that searches across open tabs, history, bookmarks, and commands — all in one place. 11 built-in commands with keyboard shortcut hints.
-
-### Adaptive Theme
-Light mode by default with full dark mode support. Choose Light, Dark, or System in Settings > Appearance.
-
-### Find in Page
-Press `Cmd+F` to search within the current page. Navigate matches with forward/backward buttons.
-
-### Semantic Memory
-With OpenRouter configured, Aether embeds your browsing history and bookmarks for concept-based retrieval. Find pages by meaning, not just keywords. History is automatically indexed on every navigation.
+Press `Cmd+K` to search across open tabs, history, bookmarks, and commands. 11 built-in commands with keyboard shortcut hints.
 
 ### AI Assist
-Optional AI-powered features:
-- **Summarize** — Get a concise summary of any page
-- **Explain** — Break down complex content in simple terms
-- **Key Points** — Extract the most important facts
-- **Extract Actions** — Pull out action items and to-dos
-- **Simplify** — Rewrite content in simpler language
-- **Translate** — Translate page content to English
-- **Chat Mode** — Ask questions about the current page in a multi-turn conversation
+Optional AI-powered page analysis:
+- **Summarize** — Concise page summary with markdown formatting
+- **Explain** — Break down complex content
+- **Key Points** — Extract important facts as a bullet list
+- **Extract Actions** — Pull out action items as a checklist
+- **Simplify** — Rewrite in simpler language
+- **Translate** — Translate to English
+- **Chat Mode** — Multi-turn conversation about the current page
 
-All powered by OpenRouter — bring your own API key.
+All powered by [OpenRouter](https://openrouter.ai) — bring your own API key.
+
+### Search Integrations
+Connect one or more search APIs in Settings > Integrations:
+- **Serper** — Google Search with web, images, videos, news
+- **Firecrawl** — Web scraping and content extraction
+- **Exa** — Neural/semantic web search
+- **Tavily** — Research search with AI answers
 
 ### Tab Management
-- Pin important tabs (compact icon display)
-- Right-click context menus (duplicate, reload, copy URL, close others)
+- Pin tabs, duplicate, reload, copy URL
 - Reopen recently closed tabs (`Cmd+Shift+T`)
-- Tab count displayed in status bar
-
-### Configurable Search Engine
-Choose your default in Settings > General:
-- DuckDuckGo (default)
-- Google
-- Bing
-- Brave
+- Close other tabs from context menu
 
 ### Keyboard-First
 
@@ -141,16 +164,16 @@ Choose your default in Settings > General:
 | `Cmd+K` | Command palette |
 | `Cmd+D` | Bookmark page |
 | `Cmd+F` | Find in page |
-| `Cmd+\` | Split panel horizontally |
-| `Cmd+Shift+\` | Split panel vertically |
+| `Cmd+\` | Split horizontally |
+| `Cmd+Shift+\` | Split vertically |
 | `Cmd+Shift+S` | Toggle sidebar |
-| `Cmd++` | Zoom in |
-| `Cmd+-` | Zoom out |
-| `Cmd+0` | Reset zoom |
+| `Cmd++` / `Cmd+-` / `Cmd+0` | Zoom in / out / reset |
 | `Cmd+[` / `Cmd+]` | Back / Forward |
 | `Cmd+R` | Reload |
 | `Cmd+,` | Settings |
 | `Cmd+Shift+N` | New workspace |
+
+---
 
 ## Tech Stack
 
@@ -159,7 +182,8 @@ Choose your default in Settings > General:
 - **SQLite** (via C API) for local persistence
 - **macOS Keychain** for secure API key storage
 - **OpenRouter** for LLM + embedding APIs
-- **Swift Package Manager** — no Xcode dependency for building
+- **Serper / Firecrawl / Exa / Tavily** for web search
+- **Swift Package Manager** — no Xcode dependency
 
 ## Build from Source
 
@@ -174,40 +198,48 @@ Requires macOS 14 (Sonoma) or later and Xcode 15+.
 
 ## Architecture
 
-Aether is composed of 15 modular Swift packages:
+Aether is composed of 16 modular Swift packages:
 
 | Module | Purpose |
 |--------|---------|
 | `Aether` | App entry point, all views |
 | `AetherCore` | Models, protocols, constants |
-| `AetherUI` | Design system — adaptive colors, typography, components |
-| `BrowserEngine` | WKWebView, navigation, find-in-page, zoom |
+| `AetherUI` | Design system — colors, typography, glass components |
+| `BrowserEngine` | WKWebView, navigation, content extraction, find-in-page, zoom |
 | `TabManager` | Tab state, pinning, recently closed |
 | `PanelSystem` | Multi-panel workspace, splits, layout |
 | `HistoryEngine` | Browsing history, session tracking |
 | `BookmarkEngine` | Bookmark storage, folders, search |
 | `CommandBar` | Unified command palette (11 commands) |
 | `AIService` | OpenRouter client (LLM + embeddings) |
-| `SemanticEngine` | Vector search, cosine similarity |
+| `SemanticEngine` | Vector search, cosine similarity via Accelerate |
+| `WebSearchService` | Serper, Firecrawl, Exa, Tavily adapters + SearchManager |
 | `Onboarding` | First-run experience |
-| `Settings` | Tabbed preferences (General, Appearance, AI, Privacy, About) |
+| `Settings` | Tabbed preferences with integrations management |
 | `SecureStorage` | Keychain wrapper |
 | `Persistence` | SQLite layer, migrations |
 
-## AI Setup
+## AI & Search Setup
 
-AI features are **optional**. Aether works perfectly as a browser without them.
+AI features and search integrations are **optional**. Aether works perfectly as a browser without them.
 
-To enable AI:
+### OpenRouter (AI Assist)
 1. Get an API key from [OpenRouter](https://openrouter.ai)
 2. Enter it during onboarding or in Settings > AI
-3. AI features (summarize, explain, chat, semantic search) become available
+3. AI features (summarize, explain, chat, reading mode intelligence) become available
+
+### Search Providers
+1. Go to Settings > Integrations
+2. Expand a provider card (Serper, Firecrawl, Exa, or Tavily)
+3. Enter your API key — it will be validated and stored securely in Keychain
+4. Use the search icon in the toolbar or `Cmd+K` to search
 
 ## Privacy
 
 - All data stored locally on your Mac
 - API keys secured in macOS Keychain
 - AI calls only send page content when you explicitly request it
+- Search queries only sent to providers you configure
 - No telemetry, no tracking, no cloud sync
 
 ## License
